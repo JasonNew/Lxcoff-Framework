@@ -55,6 +55,8 @@ public class CuckooChess extends Activity implements GUIInterface {
     boolean mShowThinking;
     int mTimeLimit;
     boolean playerWhite;
+    boolean alwaysLocal;
+    int maxDepth;
     static final int ttLogSize = 16; // Use 2^ttLogSize hash entries.
     
     TextView status;
@@ -68,10 +70,15 @@ public class CuckooChess extends Activity implements GUIInterface {
         mShowThinking = settings.getBoolean("showThinking", false);
         String timeLimitStr = settings.getString("timeLimit", "5000");
         mTimeLimit = Integer.parseInt(timeLimitStr);
+        String depthStr = settings.getString("maxDepth", "12");
+        maxDepth = Integer.parseInt(depthStr);
         playerWhite = settings.getBoolean("playerWhite", true);
+        alwaysLocal = settings.getBoolean("alwaysLocal", false);
         boolean boardFlipped = settings.getBoolean("boardFlipped", false);
         cb.setFlipped(boardFlipped);
         ctrl.setTimeLimit();
+        ctrl.setMaxDepth(maxDepth);
+        ctrl.setAlwaysLocal(alwaysLocal);
         String fontSizeStr = settings.getString("fontSize", "12");
         int fontSize = Integer.parseInt(fontSizeStr);
         status.setTextSize(fontSize);

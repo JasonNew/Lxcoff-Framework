@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:android="http://schemas.android.com/apk/res/android">
+    
+    <string-array name="nrClones">
+        <item name="1">1 Clone</item>
+        <item name="2">2 Clones</item>
+        <item name="4">4 Clones</item>
+        <item name="8">8 Clones</item>
+    </string-array>
+    
+    <integer-array name="nrClonesInt">
+        <item name="1">1</item>
+        <item name="2">2</item>
+        <item name="4">4</item>
+        <item name="8">8</item>
+    </integer-array>
+    
+    <string-array name="nrClonesValues">
+        <item name="1">1</item>
+        <item name="2">2</item>
+        <item name="4">4</item>
+        <item name="8">8</item>
+    </string-array>
+    
+    <string-array name="nrQueens">
+        <item name="4">4 Queens</item>
+        <item name="5">5 Queens</item>
+        <item name="6">6 Queens</item>
+        <item name="7">7 Queens</item>
+        <item name="8">8 Queens</item>
+    </string-array>
+    
+    <integer-array name="nrQueensInt">
+        <item name="4">4</item>
+        <item name="5">5</item>
+        <item name="6">6</item>
+        <item name="7">7</item>
+        <item name="8">8</item>
+    </integer-array>
+    
+    <string-array name="nrQueensValues">
+        <item name="4">4</item>
+        <item name="5">5</item>
+        <item name="6">6</item>
+        <item name="7">7</item>
+        <item name="8">8</item>
+    </string-array>
+    
+    <string-array name="nrPhotosValues">
+        <item name="1">1</item>
+        <item name="10">10</item>
+        <item name="100">100</item>
+        <item name="1000">1000</item>
+    </string-array>
+    
+    <string-array name = "clone_ids_array">
+        <item>"-1"</item>
+        <item>"0"</item>
+        <item>"1"</item>
+        <item>"2"</item>
+        <item>"3"</item>
+        <item>"4"</item>
+        <item>"5"</item>
+        <item>"6"</item>
+        <item>"7"</item>
+    </string-array>
+    
+</resources>

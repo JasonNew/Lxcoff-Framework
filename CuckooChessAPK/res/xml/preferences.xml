@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen
   xmlns:android="http://schemas.android.com/apk/res/android">
-<CheckBoxPreference
+<EditTextPreference android:key="maxDepth" android:title="Search Depth" android:defaultValue="12" /><CheckBoxPreference android:key="alwaysLocal" android:title="Always Local" android:defaultValue="false"/><CheckBoxPreference
 	android:title="Play White"
 	android:key="playerWhite"
 	android:defaultValue="true">
@@ -30,4 +30,6 @@
 	android:entries="@array/font_size_texts"
 	android:defaultValue="12">
 </ListPreference>
+
+
 </PreferenceScreen>

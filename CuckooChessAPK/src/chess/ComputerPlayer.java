@@ -68,6 +68,7 @@ public class ComputerPlayer implements Player {
     int maxTimeMillis;
     int maxDepth;
     int maxNodes;
+    boolean alwaysLocal;
     public boolean verbose;
     TranspositionTable tt;
     Book book;
@@ -172,6 +173,14 @@ public class ComputerPlayer implements Player {
         tt = new TranspositionTable(logSize);
     }
     
+    public void setMaxDepth(int depth){
+    	this.maxDepth = depth;
+    }
+    
+    public void setAlwaysLocal(boolean alwaysLocal){
+    	this.alwaysLocal = alwaysLocal;
+    }
+    
     Search.Listener listener;
     public void setListener(Search.Listener listener) {
         this.listener = listener;
@@ -190,6 +199,9 @@ public class ComputerPlayer implements Player {
         
         History ht = new History();
         
+        if(this.alwaysLocal){
+        	this.executionController.setUserChoice(ControlMessages.STATIC_LOCAL);
+        }
         OffSearch sc = new OffSearch(this.executionController, pos, posHashList, posHashListSize, generation, ht);
 
         // Determine all legal moves

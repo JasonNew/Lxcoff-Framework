@@ -53,10 +53,13 @@ public class ChessController {
     boolean humanIsWhite;
     Thread computerThread;
     int threadStack;       // Thread stack size, or zero to use OS default
+    int maxDepth;
+    boolean alwaysLocal;
 
     // Search statistics
     String thinkingPV;
     String strToast;
+    
 
     class SearchListener implements Search.Listener {
         int currDepth = 0;
@@ -165,6 +168,14 @@ public class ChessController {
         threadStack = size;
     }
     
+    public void setMaxDepth(int depth){
+    	this.maxDepth = depth;
+    }
+    
+    public void setAlwaysLocal(boolean alwaysLocal){
+    	this.alwaysLocal = alwaysLocal;
+    }
+    
     public final void newGame(boolean humanIsWhite, int ttLogSize, boolean verbose) {
         stopComputerThinking();
         this.humanIsWhite = humanIsWhite;
@@ -173,6 +184,7 @@ public class ChessController {
         computerPlayer.verbose = verbose;
         computerPlayer.setTTLogSize(ttLogSize);
         computerPlayer.setListener(listener);
+        computerPlayer.setMaxDepth(this.maxDepth);
         if (humanIsWhite) {
             game = new Game(humanPlayer, computerPlayer);
         } else {
@@ -522,6 +534,8 @@ public class ChessController {
                 Runnable run = new Runnable() {
                     public void run() {
                         computerPlayer.timeLimit(gui.timeLimit(), gui.timeLimit(), gui.randomMode());
+                        computerPlayer.setMaxDepth(maxDepth);
+                        computerPlayer.setAlwaysLocal(alwaysLocal);
                         final String cmd = computerPlayer.getCommand(new Position(game.pos),
                                 game.haveDrawOffer(), game.getHistory());
                         gui.runOnUIThread(new Runnable() {

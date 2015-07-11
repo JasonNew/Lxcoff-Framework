@@ -172,7 +172,8 @@ public class DeviceProfiler {
 	 */
 	private static class SysClassBattery {
 		private final static String SYS_CLASS_POWER = "/sys/class/power_supply";
-		private final static String BATTERY = "/battery";
+		//private final static String BATTERY = "/battery";
+		private final static String BATTERY = "/max170xx_battery";
 		private final static String VOLTAGE = "/batt_vol";
 		private final static String VOLTAGE_ALT = "/voltage_now";
 
