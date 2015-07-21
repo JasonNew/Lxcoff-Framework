@@ -169,21 +169,23 @@ public class ClientHandler {
 						// Let the error propagate if the file cannot be created
 						// - handled by IOException
 						libFile.createNewFile();
+						Log.d(TAG, "Writing lib file to "
+								+ libFile.getAbsolutePath());
+						FileOutputStream fos = new FileOutputStream(libFile);
+						BufferedOutputStream dest = new BufferedOutputStream(fos,
+								BUFFER);
+
+						byte data[] = new byte[BUFFER];
+						int count = 0;
+						while ((count = is.read(data, 0, BUFFER)) != -1) {
+							dest.write(data, 0, count);
+						}
+						dest.flush();
+						dest.close();
+					}else{
+						Log.d(TAG, "Lib file " + libFile.getAbsolutePath() + " exists");
 					}
 
-					Log.d(TAG, "Writing lib file to "
-							+ libFile.getAbsolutePath());
-					FileOutputStream fos = new FileOutputStream(libFile);
-					BufferedOutputStream dest = new BufferedOutputStream(fos,
-							BUFFER);
-
-					byte data[] = new byte[BUFFER];
-					int count = 0;
-					while ((count = is.read(data, 0, BUFFER)) != -1) {
-						dest.write(data, 0, count);
-					}
-					dest.flush();
-					dest.close();
 					is.close();
 
 					// Store the library to the list
@@ -323,8 +325,7 @@ public class ClientHandler {
 				// restarting the method
 				if (e.getTargetException() instanceof UnsatisfiedLinkError) {
 					Log
-					.d(TAG,
-							"UnsatisfiedLinkError thrown, loading libs and retrying");
+					.d(TAG, "UnsatisfiedLinkError thrown, loading libs and retrying");
 					Method libLoader = objClass.getMethod("loadLibraries",
 							LinkedList.class);
 					try {
@@ -336,6 +337,7 @@ public class ClientHandler {
 								+ ": pure execution time - "
 								+ (execDuration / 1000000) + "ms");
 					} catch (InvocationTargetException e1) {
+						Log.d(TAG,"InvocationTargetException", e1.getTargetException());
 						result = e1;
 					}
 				} else {
