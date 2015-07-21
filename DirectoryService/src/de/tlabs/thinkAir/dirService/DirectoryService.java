@@ -10,10 +10,10 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.logging.Logger;
 
-import de.tlabs.thinkAir.lib.Clone;
-import de.tlabs.thinkAir.lib.Clone.CloneState;
-import de.tlabs.thinkAir.lib.Configuration;
-import de.tlabs.thinkAir.lib.ControlMessages;
+import org.jason.lxcoff.lib.Clone;
+import org.jason.lxcoff.lib.Configuration;
+import org.jason.lxcoff.lib.ControlMessages;
+import org.jason.lxcoff.lib.Clone.CloneState;
 
 /**
  * This class is responsible for starting the clones needed for the C2C platform and to give the needed info to the phones.

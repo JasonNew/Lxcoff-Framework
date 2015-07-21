@@ -28,11 +28,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 
+import org.jason.lxcoff.lib.ExecutionController;
+import org.jason.lxcoff.lib.Remoteable;
+
 import com.google.gson.Gson;
 
-import de.tlabs.thinkAir.lib.ExecutionController;
-import de.tlabs.thinkAir.lib.Remote;
-import de.tlabs.thinkAir.lib.Remoteable;
 
 /**
  *

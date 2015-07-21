@@ -11,11 +11,11 @@ import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Logger;
 
-import de.tlabs.thinkAir.lib.Clone;
-import de.tlabs.thinkAir.lib.Clone.CloneState;
-import de.tlabs.thinkAir.lib.Clone.CloneType;
-import de.tlabs.thinkAir.lib.Configuration;
-import de.tlabs.thinkAir.lib.ControlMessages;
+import org.jason.lxcoff.lib.Clone;
+import org.jason.lxcoff.lib.Configuration;
+import org.jason.lxcoff.lib.ControlMessages;
+import org.jason.lxcoff.lib.Clone.CloneState;
+import org.jason.lxcoff.lib.Clone.CloneType;
 
 public class CloneHandler implements Runnable {
 

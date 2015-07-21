@@ -25,17 +25,19 @@ import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
+import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.security.SecureRandom;
 import java.util.List;
 import java.util.Random;
 
+import org.jason.lxcoff.lib.Configuration;
+import org.jason.lxcoff.lib.ControlMessages;
+import org.jason.lxcoff.lib.ExecutionController;
+
 import com.google.gson.Gson;
 
-import de.tlabs.thinkAir.lib.Configuration;
-import de.tlabs.thinkAir.lib.ControlMessages;
-import de.tlabs.thinkAir.lib.ExecutionController;
 import android.content.Context;
 import android.os.Looper;
 import android.provider.Settings.Secure;
@@ -110,6 +112,7 @@ public class ComputerPlayer implements Player {
 			Log.e(TAG, "Could not connect: " + e.getMessage());
 		} */catch (IOException e) {
 			Log.e(TAG, "IOException: " + e.getMessage());
+			//return ;
 		} catch (ClassNotFoundException e) {
 			Log.e(TAG, "Could not find Clone class: " + e.getMessage());
 			return;
@@ -149,7 +152,8 @@ public class ComputerPlayer implements Player {
 		config.parseConfigFile(null, null);
 		
 		try{
-			this.dirServiceSocket  = new Socket(config.getDirServiceIp(), config.getDirServicePort());
+			this.dirServiceSocket = new Socket();
+			this.dirServiceSocket.connect(new InetSocketAddress(config.getDirServiceIp(), config.getDirServicePort()), 3000);
 			this.os = this.dirServiceSocket.getOutputStream();
 			this.is = this.dirServiceSocket.getInputStream();
 
@@ -201,6 +205,8 @@ public class ComputerPlayer implements Player {
         
         if(this.alwaysLocal){
         	this.executionController.setUserChoice(ControlMessages.STATIC_LOCAL);
+        }else{
+        	this.executionController.setUserChoice(ControlMessages.USER_CARES_ONLY_ENERGY);
         }
         OffSearch sc = new OffSearch(this.executionController, pos, posHashList, posHashListSize, generation, ht);
 

@@ -19,7 +19,7 @@ public class Container implements Serializable {
 	private int				status;
 	private int				portForDir = 4322;
 	private ContainerType	type = ContainerType.LXC;
-	private int				mem = 100;
+	private int				mem = 50;
 	private String 			cpuset = null;
 	private	int				cpushare = 1024;
 
@@ -113,7 +113,20 @@ public class Container implements Serializable {
 	 * @return the status
 	 */
 	public int getStatus() {
-		return status;
+		DBHelper dbh = null;
+		try{
+			dbh = new DBHelper();
+			ResultSet rs = dbh.dbSelect("select status from lxc where name = '" + this.name + "'"); 
+			if(rs.next()){
+				int status = rs.getInt("status");
+				this.status = status;
+			}
+		} catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            dbh.dbClose();
+        }
+		return this.status;
 	}
 
 	/**

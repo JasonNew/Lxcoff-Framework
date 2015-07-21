@@ -26,12 +26,12 @@ import java.util.LinkedList;
 import java.util.UUID;
 import java.util.Base64;
 
-import de.tlabs.thinkAir.lib.Clone;
-import de.tlabs.thinkAir.lib.Clone.CloneState;
-import de.tlabs.thinkAir.lib.profilers.NetworkProfiler;
-import de.tlabs.thinkAir.lib.Configuration;
-import de.tlabs.thinkAir.lib.ControlMessages;
-import de.tlabs.thinkAir.lib.ResultContainer;
+import org.jason.lxcoff.lib.Clone;
+import org.jason.lxcoff.lib.Configuration;
+import org.jason.lxcoff.lib.ControlMessages;
+import org.jason.lxcoff.lib.ResultContainer;
+import org.jason.lxcoff.lib.Clone.CloneState;
+import org.jason.lxcoff.lib.profilers.NetworkProfiler;
 
 public class PhoneHandler implements Runnable {
 
