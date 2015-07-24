@@ -2,8 +2,13 @@ package org.jason.lxcoff.lib;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.OutputStream;
 import java.io.Serializable;
+import java.net.Socket;
 import java.security.PublicKey;
 
 public class Clone implements Serializable {
@@ -17,8 +22,15 @@ public class Clone implements Serializable {
 	private CloneState		status;
 	private int				portForPhone;
 	private int				portForClone;
+	private int				portForDir = 4322;
 	private CloneType		type;
 	private PublicKey		publicKey;
+	//Clone connect socket
+	public Socket 					conSocket;
+	public InputStream				conis;
+	public OutputStream			conos;
+	public ObjectOutputStream		conoos;
+	public ObjectInputStream		conois;
 
 	public Clone() {
 		this.status = CloneState.STOPPED;
@@ -41,7 +53,7 @@ public class Clone implements Serializable {
 	}
 	
 	public enum CloneState {
-		UNKNOWN, STOPPED, PAUSED, RESUMED, AUTHENTICATED, ASSIGNED_TO_PHONE
+		UNKNOWN, STOPPED, PAUSED, RESUMED, AUTHENTICATED, ASSIGNED_TO_PHONE, STARTING
 	}
 	
 	/**
@@ -91,6 +103,8 @@ public class Clone implements Serializable {
 	 * @return the ip
 	 */
 	public String getIp() {
+		String out = executeCommand("/root/dirservice/getip.sh " + this.name);
+		this.ip = out.trim();
 		return ip;
 	}
 
@@ -134,6 +148,13 @@ public class Clone implements Serializable {
 	 */
 	public int getPortForClone() {
 		return portForClone;
+	}
+	
+	/**
+	 * @return the portForClone
+	 */
+	public int getPortForDir() {
+		return this.portForDir;
 	}
 
 	/**
@@ -198,7 +219,7 @@ public class Clone implements Serializable {
 			case STOPPED:
 				if (startVBClone()) {
 					System.out.println("Started the Virtualbox clone " + this.name);
-					this.status = CloneState.RESUMED;
+					this.status = CloneState.STARTING;
 					return true;
 				}
 				else {
@@ -210,7 +231,7 @@ public class Clone implements Serializable {
 			case PAUSED:
 				if (resumeVBClone()) {
 					System.out.println("Resumed the Virtualbox clone " + this.name);
-					this.status = CloneState.RESUMED;
+					this.status = CloneState.STARTING;
 					return true;
 				}
 				else {
