@@ -33,6 +33,9 @@ import chess.TextIO;
 import chess.UndoInfo;
 import chess.Game.GameState;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
@@ -55,7 +58,8 @@ public class ChessController {
     int threadStack;       // Thread stack size, or zero to use OS default
     int maxDepth;
     boolean alwaysLocal;
-
+    public boolean auto = false;
+    
     // Search statistics
     String thinkingPV;
     String strToast;
@@ -176,20 +180,24 @@ public class ChessController {
     	this.alwaysLocal = alwaysLocal;
     }
     
-    public final void newGame(boolean humanIsWhite, int ttLogSize, boolean verbose) {
+    public final void newGame(boolean humanIsWhite, int ttLogSize, boolean verbose, boolean auto) {
         stopComputerThinking();
         this.humanIsWhite = humanIsWhite;
+        this.auto = auto;
         humanPlayer = new HumanPlayer();
         computerPlayer = new ComputerPlayer(context);
         computerPlayer.verbose = verbose;
         computerPlayer.setTTLogSize(ttLogSize);
         computerPlayer.setListener(listener);
         computerPlayer.setMaxDepth(this.maxDepth);
-        if (humanIsWhite) {
+        if(auto){
+        	game = new Game(computerPlayer, computerPlayer);
+        } else if (humanIsWhite) {
             game = new Game(humanPlayer, computerPlayer);
         } else {
             game = new Game(computerPlayer, humanPlayer);
         }
+        
     }
     public final void startGame() {
         gui.setSelection(-1);
@@ -385,7 +393,7 @@ public class ChessController {
     }
     
     public final boolean humansTurn() {
-        return game.pos.whiteMove == humanIsWhite;
+        return !this.auto && game.pos.whiteMove == humanIsWhite;
     }
     public final boolean computerThinking() {
         return computerThread != null;
@@ -526,10 +534,24 @@ public class ChessController {
         int sq = (m != null) ? m.to : -1;
         gui.setSelection(sq);
     }
+    
+/*    private void startLogRecord() {
+    	try {
+			if (logFileWriter == null) {
+				File logFile = new File(logFileName);
+				logFile.createNewFile(); // Try creating new, if doesn't exist
+				logFileWriter = new FileWriter(logFile, true);
+			}
+
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+    }*/
 
     
     private void startComputerThinking() {
-        if (game.pos.whiteMove != humanIsWhite) {
+        if (this.auto || game.pos.whiteMove != humanIsWhite) {
             if (computerThread == null) {
                 Runnable run = new Runnable() {
                     public void run() {
@@ -540,11 +562,16 @@ public class ChessController {
                                 game.haveDrawOffer(), game.getHistory());
                         gui.runOnUIThread(new Runnable() {
                             public void run() {
+                            	if(cmd == null)
+                            		return ;
                                 game.processString(cmd);
                                 thinkingPV = "";
                                 updateGUI();
                                 setSelection();
                                 stopComputerThinking();
+                                if(auto && game.getGameState() == GameState.ALIVE){
+                                	 startComputerThinking();
+                                }
                             }
                         });
                     }
@@ -566,8 +593,8 @@ public class ChessController {
         if (computerThread != null) {
             computerPlayer.timeLimit(0, 0, false);
             try {
-                computerThread.join();
-            } catch (InterruptedException ex) {
+                computerThread.stop();
+            } catch (Exception ex) {
                 System.out.printf("Could not stop thread%n");
             }
             computerThread = null;

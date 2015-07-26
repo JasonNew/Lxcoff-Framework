@@ -23,6 +23,9 @@ import android.util.Log;
 import chess.Search.Listener;
 import chess.TranspositionTable.TTEntry;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -49,6 +52,8 @@ public class OffSearch extends Remoteable {
 	transient private static String TAG = "OffSearch";
 	transient private ExecutionController controller;
     transient Listener listener;
+    private static String logFileName = "/sdcard/DefaultGame.txt";
+	private static FileWriter logFileWriter;
 	
 	public OffSearch(ExecutionController controller, Position pos, long[] posHashList, int posHashListSize, byte generation, History ht){
 		this.controller = controller;
@@ -59,6 +64,26 @@ public class OffSearch extends Remoteable {
         this.tt = new TranspositionTable(15);
         this.tt.setGeneration(this.generation);
         this.ht = new History();
+	}
+	
+	public static void startNewLog(){
+		logFileName = "/sdcard/GameRecord/game" + System.currentTimeMillis() + ".txt"; 
+		if (logFileWriter != null){
+			try {
+				logFileWriter.close();
+			} catch (IOException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+		}
+		try {
+			File logFile = new File(logFileName);
+			logFile.createNewFile(); // Try creating new, if doesn't exist
+			logFileWriter = new FileWriter(logFile, true);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 	
 	
@@ -89,7 +114,18 @@ public class OffSearch extends Remoteable {
 			e.printStackTrace();
 		}
 		
-		this.listener.notifyTimeCost("search "+maxDepth+" depth cost "+ (System.nanoTime()-starttime)/1000000 + " ms");
+		long dura = System.nanoTime()-starttime;
+		if (logFileWriter != null) {
+			try {
+				logFileWriter.append(dura + "\n");
+				logFileWriter.flush();
+
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		this.listener.notifyTimeCost("search "+maxDepth+" depth cost "+ dura/1000000 + " ms");
 		return result;
 		
 	}    

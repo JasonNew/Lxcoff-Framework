@@ -46,6 +46,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 import chess.ChessParseError;
 import chess.Move;
+import chess.OffSearch;
 import chess.Position;
 import chess.TextIO;
 
@@ -120,7 +121,7 @@ public class CuckooChess extends Activity implements GUIInterface {
         cb.requestFocus();
         cb.setClickable(true);
 
-        ctrl.newGame(playerWhite, ttLogSize, false);
+        ctrl.newGame(playerWhite, ttLogSize, false, false);
         {
             String fen = "";
             String moves = "";
@@ -219,22 +220,34 @@ public class CuckooChess extends Activity implements GUIInterface {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
-        case R.id.item_new_game:
-            ctrl.newGame(playerWhite, ttLogSize, false);
-            ctrl.startGame();
-            return true;
-        case R.id.item_undo:
-            ctrl.takeBackMove();
-            return true;
-        case R.id.item_redo:
-            ctrl.redoMove();
-            return true;
-        case R.id.item_settings:
-        {
-            Intent i = new Intent(CuckooChess.this, Preferences.class);
-            startActivityForResult(i, 0);
-            return true;
-        }
+	        case R.id.item_new_game:
+	            ctrl.newGame(playerWhite, ttLogSize, false, false);
+	            ctrl.startGame();
+	            return true;
+	        case R.id.item_undo:
+	            ctrl.takeBackMove();
+	            return true;
+	        case R.id.item_redo:
+	            ctrl.redoMove();
+	            return true;
+	        case R.id.item_settings:
+	        {
+	            Intent i = new Intent(CuckooChess.this, Preferences.class);
+	            startActivityForResult(i, 0);
+	            return true;
+	        }
+	        case R.id.item_auto_game:
+	        {
+	        	ctrl.auto = true;
+	            ctrl.startGame();
+	            return true;
+	        }
+	        case R.id.item_stop_game:
+	        {
+	        	ctrl.auto = false;
+	            ctrl.stopComputerThinking();
+	            return true;
+	        }
         }
         return false;
     }
@@ -313,7 +326,7 @@ public class CuckooChess extends Activity implements GUIInterface {
             return alert;
         }
         case CLIPBOARD_DIALOG: {
-            final CharSequence[] items = {"Copy Game", "Copy Position", "Paste"};
+            final CharSequence[] items = {"Copy Game", "Copy Position", "Paste", "Endgame 1"};
             AlertDialog.Builder builder = new AlertDialog.Builder(this);
             builder.setTitle("Clipboard");
             builder.setItems(items, new DialogInterface.OnClickListener() {
@@ -342,6 +355,15 @@ public class CuckooChess extends Activity implements GUIInterface {
                             }
                         }
                         break;
+                    }
+                    case 3: {
+                    	String fenPgn = "1k6/1r6/2K5/Q7/8/8/8/8 w - - 0 1";
+                        try {
+                        	OffSearch.startNewLog();
+                            ctrl.setFENOrPGN(fenPgn);
+                        } catch (ChessParseError e) {
+                            Toast.makeText(getApplicationContext(), e.getMessage(), Toast.LENGTH_SHORT).show();
+                        }
                     }
                     }
                 }

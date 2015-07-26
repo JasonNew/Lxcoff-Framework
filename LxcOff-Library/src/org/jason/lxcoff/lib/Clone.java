@@ -302,8 +302,8 @@ public class Clone implements Serializable {
 	 */
 	public boolean startVBClone() {
 
-		//String out = executeCommand("VBoxManage startvm " + this.name + " --type headless");
-		String out = executeCommand("VBoxManage startvm " + this.name + " --type gui");
+		String out = executeCommand("VBoxManage startvm " + this.name + " --type headless");
+		//String out = executeCommand("VBoxManage startvm " + this.name + " --type gui");
 
 		if (out.contains("has been successfully started.")) 
 			return true;

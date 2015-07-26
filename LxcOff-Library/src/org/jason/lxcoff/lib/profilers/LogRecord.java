@@ -104,5 +104,7 @@ public class LogRecord {
 		
 		return progProfilerRecord + "," + netProfilerRecord + ","
 				+ devProfilerRecord + "," + logRecordTime;
+		/*String Record = methodName + "," + execLocation + "," + execDuration/1000000 + " ms.";
+		return  Record;*/
 	}
 }

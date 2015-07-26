@@ -250,6 +250,10 @@ public class ComputerPlayer implements Player {
             Log.d(TAG, "search with "+maxDepth+" depth costing "+ (System.nanoTime()-endtime)/1000000 + " ms : ");
         }
         
+        if(bestM == null){
+        	return null;
+        }
+        
         //currentSearch = null;
         String strMove = TextIO.moveToString(pos, bestM, false);
         Log.d("ComputerPlay", "bestM to strMove : " + strMove);

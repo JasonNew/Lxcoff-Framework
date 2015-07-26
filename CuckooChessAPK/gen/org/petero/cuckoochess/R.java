@@ -21,9 +21,11 @@ public final class R {
     }
     public static final class id {
         public static final int chessboard=0x7f080000;
+        public static final int item_auto_game=0x7f080009;
         public static final int item_new_game=0x7f080005;
         public static final int item_redo=0x7f080008;
         public static final int item_settings=0x7f080006;
+        public static final int item_stop_game=0x7f08000a;
         public static final int item_undo=0x7f080007;
         public static final int moveList=0x7f080003;
         public static final int scrollView=0x7f080002;
