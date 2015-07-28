@@ -55,10 +55,10 @@ public class ChessBoard extends View {
         flipped = false;
 
         darkPaint = new Paint();
-        darkPaint.setARGB(255, 128, 128, 128);
+        darkPaint.setARGB(255, 131, 165, 210);
 
         brightPaint = new Paint();
-        brightPaint.setARGB(255, 190, 190, 90);
+        brightPaint.setARGB(255, 255, 255, 250);
 
         redOutline = new Paint();
         redOutline.setARGB(255, 255, 0, 0);
@@ -71,7 +71,7 @@ public class ChessBoard extends View {
         greenOutline.setAntiAlias(true);
         
         whitePiecePaint = new Paint();
-        whitePiecePaint.setARGB(255, 255, 255, 255);
+        whitePiecePaint.setARGB(255, 40, 40, 40);
         whitePiecePaint.setAntiAlias(true);
         
         blackPiecePaint = new Paint();
