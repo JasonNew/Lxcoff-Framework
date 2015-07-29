@@ -115,29 +115,34 @@ public class PhoneHandler implements Runnable {
 					
 				case ControlMessages.PHONE_COMPUTATION_REQUEST:					
 					System.out.println("Execute request");
-				
-					boolean connected = false;
-					Clone c = null;
 					
-					c = findAvailableClone();
-
-					if (c != null) {
-						System.out.println("Found an authenticated/starting clone.");
-					}
-					else {
-						//Should not go in here for now.
-						System.err.println("There is no available clone running, should start one.");
-						c = startNewClone();
-						if (c == null) {
-							System.err.println("Could not find an available clone, neither started, nor stopped.");
-							break;
+					if(this.worker_clone == null || this.worker_clone.getStatus()!= CloneState.AUTHENTICATED){
+						Clone c = null;
+						
+						c = findAvailableClone();
+	
+						if (c != null) {
+							System.out.println("Found an authenticated/starting clone.");
 						}
-						c.prepareClone();
+						else {
+							//Should not go in here for now.
+							System.err.println("There is no available clone running, should start one.");
+							c = startNewClone();
+							if (c == null) {
+								System.err.println("Could not find an available clone, neither started, nor stopped.");
+								break;
+							}
+							c.prepareClone();
+						}
+						c.setStatus(CloneState.ASSIGNED_TO_PHONE);
+						
+						//receive the object from phone-client ois and repost the request to container
+						this.worker_clone = c;
+					}else{
+						
+						this.worker_clone.setStatus(CloneState.ASSIGNED_TO_PHONE);
 					}
-					c.setStatus(CloneState.ASSIGNED_TO_PHONE);
 					
-					//receive the object from phone-client ois and repost the request to container
-					this.worker_clone = c;
 					HashMap<String, String> result = (HashMap<String, String>) receiveAndRepost(ois, this.worker_clone);
 					
 					releaseClone(this.worker_clone);

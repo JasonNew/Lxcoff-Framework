@@ -94,8 +94,8 @@ public class OffSearch extends Remoteable {
 	
 	public Move iterativeDeepening(MoveGen.MoveList scMovesIn, int maxDepth, long initialMaxNodes, boolean verbose) {
 		Method toExecute;
-		Class<?>[] paramTypes = {MoveGen.MoveList.class, int.class, long.class, boolean.class};
-		Object[] paramValues = {scMovesIn, maxDepth, initialMaxNodes, verbose};
+		Class<?>[] paramTypes = {int.class, long.class, boolean.class};
+		Object[] paramValues = {maxDepth, initialMaxNodes, verbose};
 
 		Move result = null;
 		long starttime = System.nanoTime();
@@ -130,7 +130,7 @@ public class OffSearch extends Remoteable {
 		
 	}    
 	
-	public Move localIterativeDeepening(MoveGen.MoveList scMovesIn, int maxDepth, long initialMaxNodes, boolean verbose) {
+	public Move localIterativeDeepening(int maxDepth, long initialMaxNodes, boolean verbose) {
 		if(this.tt == null){
 			this.tt = new TranspositionTable(15);
 	        this.tt.setGeneration(this.generation);
@@ -159,7 +159,7 @@ public class OffSearch extends Remoteable {
             // Switch sides so that the human can decide what to do next.
             return null;
         }
-		bestM = sc.iterativeDeepening(scMovesIn, maxDepth, initialMaxNodes, verbose);
+		bestM = sc.iterativeDeepening(moves, maxDepth, initialMaxNodes, verbose);
 		return bestM;
 	} 
 	
