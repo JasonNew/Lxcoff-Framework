@@ -105,7 +105,6 @@ public class OCRActivity extends Activity implements OnClickListener {
 		}
 	// Create an execution controller	
 
-        
         this.executionController = new ExecutionController(
 				this.dirServiceSocket,
 				is, os, ois, oos,

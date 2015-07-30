@@ -21,6 +21,8 @@ public class DynamicObjectInputStream extends ObjectInputStream {
 
 	public static ClassLoader mCurrent = ClassLoader.getSystemClassLoader();
 	public static DexClassLoader mCurrentDexLoader = null;
+	
+	public static String currentApk = null;
 
 	public DynamicObjectInputStream(InputStream in) throws IOException {
 		super(in);
@@ -80,17 +82,23 @@ public class DynamicObjectInputStream extends ObjectInputStream {
 					mCurrentDexLoader);
 
 	}*/
-	public void addDex(final File apkFile) {
-		
+	public void addDex(final File apkFile, String appName) {
 		Log.d("DOIS", "dexoutpath: " + ClientHandler.dexOutputDir);
+/*		Log.d("DOIS", "currentAPK: " + DynamicObjectInputStream.currentApk);
+		Log.d("DOIS", "want to run appName: " + appName);*/
 		try{
-			if (mCurrentDexLoader == null)
+			if (mCurrentDexLoader == null || !DynamicObjectInputStream.currentApk.equals(appName)){
 				mCurrentDexLoader = new DexClassLoader(apkFile.getAbsolutePath(),
 						ClientHandler.dexOutputDir, null, mCurrent);
-			else
-				mCurrentDexLoader = new DexClassLoader(apkFile.getAbsolutePath(),
+				DynamicObjectInputStream.currentApk = new String(appName);
+			}
+			else{
+				Log.d("DOIS", "Maybe I dont need a new ClassLoader. (ClientHandler tag for debug)");
+/*				mCurrentDexLoader = new DexClassLoader(apkFile.getAbsolutePath(),
 						ClientHandler.dexOutputDir, null,
-						mCurrentDexLoader);
+						mCurrentDexLoader);*/
+			}
+			
 		} catch (NullPointerException e){
 			Log.d("DOIS", "Error" + e.getMessage());
 		}

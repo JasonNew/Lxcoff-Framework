@@ -442,6 +442,7 @@ public class ClientHandler {
 						Log.d(TAG, "Execute request - " + request);
 						
 						appName = (String) objIn.readObject();
+
 						apkFilePath = ControlMessages.CONTAINER_APK_DIR + appName + ".apk";
 						if (apkPresent(apkFilePath)) {
 							Log.d(TAG, "APK present");
@@ -454,7 +455,7 @@ public class ClientHandler {
 						}
 						File dexFile = new File(apkFilePath);
 						libraries = addLibraries(dexFile);
-						objIn.addDex(dexFile);
+						objIn.addDex(dexFile, appName);
 						
 						HashMap<String, String> result = (HashMap<String, String>) retrieveAndExecute(objIn, libraries);
 						if(result == null)
