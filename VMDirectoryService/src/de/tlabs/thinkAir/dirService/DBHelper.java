@@ -13,10 +13,10 @@ import java.sql.Statement;
  */
 
 public class DBHelper {
-	public static final String url = "jdbc:mysql://127.0.0.1:3306/androidlxc";
+	public static final String url = "jdbc:mysql://202.114.10.148:3306/androidlxc";
 	public static final String name = "com.mysql.jdbc.Driver";
 	public static final String user = "root";
-	public static final String password = "";
+	public static final String password = "KFniuchao88";
 	
 
 	public Connection conn = null;

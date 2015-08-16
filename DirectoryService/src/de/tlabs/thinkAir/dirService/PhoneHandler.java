@@ -4,6 +4,7 @@ import java.io.BufferedOutputStream;
 import java.io.EOFException;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
@@ -62,12 +63,26 @@ public class PhoneHandler implements Runnable {
 	private final int 				BUFFER = 8192;
 	
 	private DBHelper				dbh;
+	private static String			logFileName = null;
+	private static FileWriter 		logFileWriter = null;
 
 	public PhoneHandler(Socket clientSocket, InputStream is, OutputStream os, DBHelper dbh) {
 		this.clientSocket 	= clientSocket;
 		this.is				= is;
 		this.os				= os;
 		this.dbh			= dbh;
+		this.logFileName = "/root/dirservice/ExecRecord/execrecord.txt"; 
+		File needlog = new File("/root/dirservice/ExecRecord/needlog");
+		if(needlog.exists()){
+			try {
+				File logFile = new File(logFileName);
+				logFile.createNewFile(); // Try creating new, if doesn't exist
+				logFileWriter = new FileWriter(logFile, true);
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
 	}
 
 	@Override
@@ -144,9 +159,20 @@ public class PhoneHandler implements Runnable {
 						}while(!connected);
 					}
 					
-					
+					long starttime = System.nanoTime();
 					//receive the object from phone-client ois and repost the request to container
 					HashMap<String, String> result = (HashMap<String, String>) receiveAndRepost(ois, this.worker_container);
+					
+					long dura = System.nanoTime()-starttime;
+					if (logFileWriter != null) {
+						try {
+							logFileWriter.append(dura + "\n");
+							logFileWriter.flush();
+						} catch (IOException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+					}
 					
 					releaseContainer(this.worker_container);
 					
