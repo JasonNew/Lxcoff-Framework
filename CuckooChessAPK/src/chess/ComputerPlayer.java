@@ -39,10 +39,8 @@ import org.jason.lxcoff.lib.ExecutionController;
 import com.google.gson.Gson;
 
 import android.content.Context;
-import android.os.Looper;
 import android.provider.Settings.Secure;
 import android.util.Log;
-import android.widget.Toast;
 
 /**
  * A computer algorithm player.

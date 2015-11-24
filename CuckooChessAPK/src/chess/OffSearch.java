@@ -18,23 +18,16 @@
 
 package chess;
 
-import android.content.Context;
-import android.util.Log;
 import chess.Search.Listener;
-import chess.TranspositionTable.TTEntry;
 
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
 
 import org.jason.lxcoff.lib.ExecutionController;
 import org.jason.lxcoff.lib.Remoteable;
 
-import com.google.gson.Gson;
 
 
 /**

@@ -16,12 +16,15 @@ import java.util.Date;
 import org.jason.lxcoff.lib.Configuration;
 import org.jason.lxcoff.lib.ControlMessages;
 import org.jason.lxcoff.lib.ExecutionController;
+
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
@@ -29,10 +32,12 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.StrictMode;
+import android.preference.PreferenceManager;
 import android.provider.MediaStore;
 import android.provider.Settings.Secure;
 import android.util.Log;
 import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
@@ -42,7 +47,7 @@ import android.widget.Toast;
 
 @TargetApi(Build.VERSION_CODES.GINGERBREAD)
 @SuppressLint("NewApi")
-public class OCRActivity extends Activity implements OnClickListener {
+public class OCRActivity extends Activity implements OnClickListener,OnSharedPreferenceChangeListener {
 	//private TessOCR mTessOCR;
 	
 	private OffOCR mTessOCR;
@@ -54,7 +59,10 @@ public class OCRActivity extends Activity implements OnClickListener {
 	private static final int REQUEST_TAKE_PHOTO = 1;
 	private static final int REQUEST_PICK_PHOTO = 2;
 	
+	SharedPreferences settings;
+	
 	private String TAG = "OCRActivity";
+	private String imageFile = "/system/off-app/off-file/ocr.png";
 	
 	Context context;
 	private Configuration		config;
@@ -64,12 +72,17 @@ public class OCRActivity extends Activity implements OnClickListener {
 	OutputStream os					= null;
 	ObjectOutputStream oos			= null;
 	ObjectInputStream ois			= null;
+	
+	public static String dexOutputDir = null;
 
 	@SuppressLint("NewApi")
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
+		
+		settings = PreferenceManager.getDefaultSharedPreferences(this); 
+        settings.registerOnSharedPreferenceChangeListener(this);  
 
 		mResult = (TextView) findViewById(R.id.tv_result);
 		mImage = (ImageView) findViewById(R.id.image);
@@ -79,6 +92,8 @@ public class OCRActivity extends Activity implements OnClickListener {
 		mButtonCamera.setOnClickListener(this);
 		
 		this.context = getApplicationContext();
+		
+		this.dexOutputDir = this.context.getDir("dex", 0).getAbsolutePath();
 		
 		// I wanna use network in main thread, so ...
         if (android.os.Build.VERSION.SDK_INT > 9) {
@@ -113,8 +128,8 @@ public class OCRActivity extends Activity implements OnClickListener {
 				context);
         
         mTessOCR = new OffOCR(executionController);
-    	//mTessOCR = new TessOCR();
-		
+
+        readPrefs();
 	}
 	
 	/**
@@ -191,6 +206,16 @@ public class OCRActivity extends Activity implements OnClickListener {
 		}
 	}
 	
+	private void readPrefs() {
+        boolean alwaysLocal = settings.getBoolean("alwaysLocal", false);
+        Log.d(TAG, "alwaysLocal is " + alwaysLocal);
+        if(alwaysLocal){
+        	this.executionController.setUserChoice(ControlMessages.STATIC_LOCAL);
+        }else{
+        	this.executionController.setUserChoice(ControlMessages.USER_CARES_ONLY_ENERGY);
+        }
+    }
+	
 	@Override
 	protected void onResume() {
 		// TODO Auto-generated method stub
@@ -215,6 +240,18 @@ public class OCRActivity extends Activity implements OnClickListener {
 		// Inflate the menu; this adds items to the action bar if it is present.
 		getMenuInflater().inflate(R.menu.main, menu);
 		return true;
+	}
+	
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item){
+		switch (item.getItemId()) {
+        case R.id.action_settings:
+        	Intent mIntent = new Intent();  
+            mIntent.setClass(this, Preferences.class);  
+            startActivity(mIntent);  
+            break;
+        }
+        return super.onOptionsItemSelected(item);  
 	}
 
 	@Override
@@ -316,7 +353,18 @@ public class OCRActivity extends Activity implements OnClickListener {
 		int id = v.getId();
 		switch (id) {
 		case R.id.bt_gallery:
-			pickPhoto();
+			//pickPhoto();
+			long stime = System.nanoTime();
+			
+			OffOcr2 offocr = new OffOcr2(this.executionController);
+
+			Log.i(TAG, "OCR Begins. ");
+			String result = offocr.DoOCR(this.imageFile);
+			long dura = System.nanoTime() - stime;
+
+			Log.i(TAG, "OCR text: " + result + ". Cost " + dura/1000000 + "ms.");
+			Toast.makeText(this, "OCR text: " + result + ". Cost " + dura/1000000 + "ms.", Toast.LENGTH_SHORT).show();
+
 			break;
 		case R.id.bt_camera:
 			takePhoto();
@@ -366,5 +414,11 @@ public class OCRActivity extends Activity implements OnClickListener {
 
 			};
 		}).start();
+	}
+	
+	@Override
+	public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+		// TODO Auto-generated method stub
+		readPrefs();
 	}
 }

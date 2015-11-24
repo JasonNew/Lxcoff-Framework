@@ -2,20 +2,20 @@ package com.example.ocr;
 
 import java.io.File;
 
+import org.jason.lxcoff.lib.ControlMessages;
+
 import android.graphics.Bitmap;
 import android.os.Environment;
 import android.util.Log;
-
-import com.googlecode.tesseract.android.TessBaseAPI;
 
 public class TessOCR {
 	private TessBaseAPI mTess;
 	
 	public TessOCR() {
 		// TODO Auto-generated constructor stub
-		Log.e("TessOCR","run");
+		Log.d("TessOCR","Start to run TessOCR");
 		mTess = new TessBaseAPI();
-		String datapath = Environment.getExternalStorageDirectory() + "/tesseract/";
+		String datapath = ControlMessages.CONTAINER_APK_DIR  + "tesseract/";
 		String language = "eng";
 		File dir = new File(datapath + "tessdata/");
 		if (!dir.exists()) 

@@ -1,7 +1,6 @@
 package de.tlabs.thinkAir.dirService;
 
 import java.io.BufferedOutputStream;
-import java.io.EOFException;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
@@ -9,30 +8,16 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.io.OptionalDataException;
 import java.io.OutputStream;
-import java.lang.reflect.Array;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.net.ConnectException;
 import java.net.InetSocketAddress;
-import java.net.NoRouteToHostException;
 import java.net.Socket;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.UUID;
-import java.util.Base64;
 
-import org.jason.lxcoff.lib.Clone;
-import org.jason.lxcoff.lib.Configuration;
 import org.jason.lxcoff.lib.ControlMessages;
-import org.jason.lxcoff.lib.ResultContainer;
-import org.jason.lxcoff.lib.Clone.CloneState;
-import org.jason.lxcoff.lib.profilers.NetworkProfiler;
 
 public class PhoneHandler implements Runnable {
 
@@ -164,7 +149,7 @@ public class PhoneHandler implements Runnable {
 					HashMap<String, String> result = (HashMap<String, String>) receiveAndRepost(ois, this.worker_container);
 					
 					long dura = System.nanoTime()-starttime;
-					if (logFileWriter != null) {
+/*					if (logFileWriter != null) {
 						try {
 							logFileWriter.append(dura + "\n");
 							logFileWriter.flush();
@@ -172,7 +157,7 @@ public class PhoneHandler implements Runnable {
 							// TODO Auto-generated catch block
 							e.printStackTrace();
 						}
-					}
+					}*/
 					
 					releaseContainer(this.worker_container);
 					
@@ -187,13 +172,15 @@ public class PhoneHandler implements Runnable {
 
 					try {
 						// Send back over the socket connection
-						System.out.println("Send result back");
+						System.out.println("Sending result back");
+						System.out.println("Send retType is " + result.get("retType"));
 						this.oos.writeObject(result.get("retType"));
+						System.out.println("Send retVal is " + result.get("retVal"));
 						this.oos.writeObject(result.get("retVal"));
 						// Clear ObjectOutputCache - Java caching unsuitable
 						// in this case
 						this.oos.flush();
-						this.oos.reset();
+						//this.oos.reset();
 
 						System.out.println("Result successfully sent");
 					} catch (IOException e) {
@@ -203,6 +190,23 @@ public class PhoneHandler implements Runnable {
 					}
 
 					break;
+					
+				case ControlMessages.SEND_FILE_FIRST:
+					System.out.println("The offloading need to send file first");
+					String filePath = (String) ois.readObject();
+					String fileName = filePath.substring(filePath.lastIndexOf("/")+1);
+					filePath = ControlMessages.DIRSERVICE_APK_DIR + "off-file/" + fileName;
+					if (apkPresent(filePath)) {
+						System.out.println("File present " + filePath);
+						os.write(ControlMessages.FILE_PRESENT);
+					} else {
+						System.out.println("request File " + filePath);
+						os.write(ControlMessages.SEND_FILE_REQUEST);
+						// Receive the apk file from the client
+						receiveApk(ois, filePath);
+					}
+					break;
+				
 				}
 			}
 		} catch (IOException e) {

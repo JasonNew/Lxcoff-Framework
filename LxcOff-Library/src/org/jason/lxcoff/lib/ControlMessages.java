@@ -75,6 +75,7 @@ public class ControlMessages {
 //	public static final String  DIRSERVICE_APK_DIR				= "E:/dirService/apk/";
 	public static final String  DIRSERVICE_APK_DIR				= "/root/system/off-app/";
 	public static final String  CONTAINER_APK_DIR				= "/system/off-app/";
+	public static final String 	DEX_OUT_PATH					= "/data/data/org.jason.lxcoff.server/app_dex/";
 	
 	// Communication Phone/Clone <-> DirectoryService
 	public static final int 	PHONE_CONNECTION 				= 30;
@@ -87,6 +88,9 @@ public class ControlMessages {
 	public static final int 	GET_PORT_FOR_PHONES				= 37;
 	public static final int		PHONE_COMPUTATION_REQUEST		= 38;
 	public static final int		CONTAINER_CONNECTION			= 39;
+	public static final int		SEND_FILE_FIRST					= 40;
+	public static final int		SEND_FILE_REQUEST			    = 41;
+	public static final int		FILE_PRESENT			    	= 42;
 
 	
 	public enum SETUP_TYPE {

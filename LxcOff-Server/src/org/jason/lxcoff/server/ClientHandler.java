@@ -313,11 +313,18 @@ public class ClientHandler {
 			Object result = null;
 			Long execDuration = null;
 			try {
-				Long startExecTime = System.nanoTime();
+/*				Long startExecTime = System.nanoTime();
 				result = runMethod.invoke(objToExecute, pValues);
 				execDuration = System.nanoTime() - startExecTime;
 				Log.d(TAG, runMethod.getName() + ": pure execution time - "
-						+ (execDuration / 1000000) + "ms");
+						+ (execDuration / 1000000) + "ms");*/
+				Method libLoader = objClass.getMethod("loadLibraries",
+						LinkedList.class);
+				libLoader.invoke(objToExecute, libraries);
+				Long startExecTime = System.nanoTime();
+				result = runMethod.invoke(objToExecute, pValues);
+				execDuration = System.nanoTime() - startExecTime;
+				Log.d(TAG, runMethod.getName() + ": pure execution time - " + (execDuration / 1000000) + "ms");
 			} catch (InvocationTargetException e) {
 				// The method might have failed if the required shared library
 				// had
@@ -484,30 +491,20 @@ public class ClientHandler {
 						Log.d(TAG, "Reply to PING");
 						out.write(ControlMessages.PONG);
 						break;
+						
+					case ControlMessages.SEND_FILE_FIRST:
+						Log.d(TAG, "The offloading need to send file first");
+						out.write(ControlMessages.SEND_FILE_REQUEST);
+						String filePath = (String) objIn.readObject();
+						String fileName = filePath.substring(filePath.lastIndexOf("/")+1);
+						filePath = ControlMessages.CONTAINER_APK_DIR + "off-file/" + fileName;
+						receiveApk(objIn, filePath);
+						break;
 
-/*					case ControlMessages.APK_REGISTER:
-						appName = (String) objIn.readObject();
-						apkFilePath = mContext.getFilesDir().getAbsolutePath()
-								+ "/" + appName + ".apk";
-						if (apkPresent(apkFilePath)) {
-							Log.d(TAG, "APK present");
-							out.write(ControlMessages.APK_PRESENT);
-						} else {
-							Log.d(TAG, "request APK");
-							out.write(ControlMessages.APK_REQUEST);
-							// Receive the apk file from the client
-							receiveApk(objIn, apkFilePath);
-						}
-						File dexFile = new File(apkFilePath);
-						libraries = addLibraries(dexFile);
-						objIn.addDex(dexFile);
-
-						break;*/
-
-					case ControlMessages.CLONE_ID_SEND:
+/*					case ControlMessages.CLONE_ID_SEND:
 						cloneId = in.read();
 						ControlMessages.writeCloneId(cloneId);
-						break;
+						break;*/
 					}
 				}
 				Log.d(TAG, "Client disconnected");

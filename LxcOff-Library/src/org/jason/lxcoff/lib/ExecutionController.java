@@ -300,6 +300,54 @@ public class ExecutionController {
 			// throw e.getTargetException();
 		}
 	}
+	
+	
+	//execute with file to send first
+	public Object execute(Method m, Object[] pValues, Object o, String fileName)
+			throws IllegalArgumentException, SecurityException,
+			IllegalAccessException, ClassNotFoundException,
+			NoSuchMethodException {
+		Object result;
+		String classMethodName = o.getClass().toString() + m.getName();
+
+		ProgramProfiler progProfiler = new ProgramProfiler(classMethodName);
+
+		try {
+
+			if (!this.netProfiler.noConnectivity() && mSolver.executeRemotely(mContext, classMethodName) ) {
+
+				Profiler profiler = new Profiler(mRegime, mContext, progProfiler, this.netProfiler, mDevProfiler);
+
+				// Start tracking execution statistics for the method
+				profiler.startExecutionInfoTracking();
+				result = executeRemotely(m, pValues, o, fileName);
+				// Collect execution statistics
+				profiler.stopAndLogExecutionInfoTracking(mPureExecutionDuration);
+				lastLogRecord = profiler.lastLogRecord;
+				return result;
+			} else { // Execute locally
+				if(this.netProfiler.noConnectivity()){
+					onLine =false;
+				}
+				Profiler profiler1 = new Profiler(mRegime, mContext, progProfiler, null, mDevProfiler);
+
+				// Start tracking execution statistics for the method
+				profiler1.startExecutionInfoTracking();
+				result = executeLocally(m, pValues, o);
+				// Collect execution statistics
+				profiler1.stopAndLogExecutionInfoTracking(mPureExecutionDuration);
+				lastLogRecord = profiler1.lastLogRecord;
+				return result;
+			}
+
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			Log.d(TAG, "InvocationTargetException " + e);
+			return e;
+			// throw e.getTargetException();
+		}
+	}
 
 	/**
 	 * Execute the method locally
@@ -377,6 +425,70 @@ public class ExecutionController {
 
 		return result;
 	}
+	
+	/**
+	 * Execute method remotely with file sent first
+	 * 
+	 * @param m
+	 * @param pValues
+	 * @param o
+	 * @param filename
+	 * @return
+	 * @throws IllegalArgumentException
+	 * @throws IllegalAccessException
+	 * @throws InvocationTargetException
+	 * @throws NoSuchMethodException
+	 * @throws ClassNotFoundException
+	 * @throws SecurityException
+	 */
+	private Object executeRemotely(Method m, Object[] pValues, Object o, String filename)
+			throws IllegalArgumentException, IllegalAccessException,
+			InvocationTargetException, SecurityException,
+			ClassNotFoundException, NoSuchMethodException {
+		Object result = null;
+		try {
+			Long startTime = System.nanoTime();
+			mOutStream.write(ControlMessages.SEND_FILE_FIRST);
+			mObjOutStream.writeObject(filename);
+			int response = mInStream.read();
+
+			if (response == ControlMessages.SEND_FILE_REQUEST) {
+				// Send the APK file if needed
+				sendFile(filename, mObjOutStream);
+			}
+			
+			mOutStream.write(ControlMessages.PHONE_COMPUTATION_REQUEST);
+			result = sendAndExecute(m, pValues, o, mObjInStream, mObjOutStream);
+
+			Long duration = System.nanoTime() - startTime;
+			Log.d("ExecutionLocation", "REMOTE " + m.getName()
+					+ ": Actual Send-Receive duration - " + duration / 1000000
+					+ "ms");
+		} catch (NullPointerException e){
+			// establish failed so that mOutStream is null, execute locally
+			Log.e(TAG, "ERROR " + m.getName() + ": " + e);
+			e.printStackTrace();
+			result = executeLocally(m, pValues, o);
+			ConnectionRepair repair = new ConnectionRepair();
+			repair.start();
+		} catch (UnknownHostException e) {
+			// No such host exists, execute locally
+			Log.e(TAG, "ERROR " + m.getName() + ": " + e);
+			e.printStackTrace();
+			result = executeLocally(m, pValues, o);
+			ConnectionRepair repair = new ConnectionRepair();
+			repair.start();
+		} catch (IOException e) {
+			// Connection broken, execute locally
+			Log.e(TAG, "ERROR " + m.getName() + ": " + e);
+			e.printStackTrace();
+			result = executeLocally(m, pValues, o);
+			ConnectionRepair repair = new ConnectionRepair();
+			repair.start();
+		}
+
+		return result;
+	}
 
 	/**
 	 * Send APK file to the remote server
@@ -400,6 +512,42 @@ public class ExecutionController {
 		// Send the file
 		long startTime = System.nanoTime();
 		Log.d(TAG, "Sending apk");
+		objOut.write(tempArray);
+		objOut.flush();
+		long estimatedTime = System.nanoTime() - startTime;
+		// The 1000000000 comes from measuring time in nanoseconds
+		Double estimatedBandwidth = ((double) tempArray.length / (double) estimatedTime) * 1000000000;
+		NetworkProfiler.addNewBandwidthEstimate(estimatedBandwidth);
+		Log.d(TAG, tempArray.length + " bytes sent in "
+				+ estimatedTime + " ns");
+		Log.d(TAG, "Estimated bandwidth - "
+				+ NetworkProfiler.bandwidth + " Bps");
+		
+		bis.close();
+	}
+	
+	/**
+	 * Send necessary file to the remote server for offloading param
+	 * 
+	 * @param fileName
+	 *            file name of the file (full path)
+	 * @param objOut
+	 *            ObjectOutputStream to write the file to
+	 * @throws IOException
+	 */
+	private void sendFile(String fileName, ObjectOutputStream objOut)
+			throws IOException {
+		File sentFile = new File(fileName);
+		FileInputStream fin = new FileInputStream(sentFile);
+		BufferedInputStream bis = new BufferedInputStream(fin);
+		byte[] tempArray = new byte[(int) sentFile.length()];
+		bis.read(tempArray, 0, tempArray.length);
+		// Send file length first
+		Log.d(TAG, "Sending File length - " + tempArray.length);
+		objOut.writeInt(tempArray.length);
+		// Send the file
+		long startTime = System.nanoTime();
+		Log.d(TAG, "Sending File");
 		objOut.write(tempArray);
 		objOut.flush();
 		long estimatedTime = System.nanoTime() - startTime;
@@ -517,6 +665,11 @@ public class ExecutionController {
 		
 		String retType = (String) objIn.readObject();
 		Log.d(TAG, "response type : " + retType);
+		
+		if(retType.equals("int")){
+			retType = "java.lang.Integer";
+		}
+		
 		String retVal = (String) objIn.readObject();
 		Log.d(TAG, "response value : " + retVal);
 		
