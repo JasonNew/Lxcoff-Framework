@@ -668,6 +668,8 @@ public class ExecutionController {
 		
 		if(retType.equals("int")){
 			retType = "java.lang.Integer";
+		}else if(retType.equals("double")){
+			retType = "java.lang.Double";
 		}
 		
 		String retVal = (String) objIn.readObject();

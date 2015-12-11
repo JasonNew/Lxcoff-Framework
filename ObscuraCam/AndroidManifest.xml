@@ -6,6 +6,20 @@
       android:installLocation="auto">
       
     <uses-sdk android:minSdkVersion="10" android:targetSdkVersion="18"/>
+     <uses-permission android:name="android.permission.INTERNET" >
+    </uses-permission>
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" >
+    </uses-permission>
+    <uses-permission android:name="android.permission.CLEAR_APP_CACHE" >
+    </uses-permission>
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" >
+    </uses-permission>
+    <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" >
+    </uses-permission>
+    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" >
+    </uses-permission>
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" >
+    </uses-permission>
     
     <uses-permission android:name="android.permission.READ_MEDIA_STORAGE"/>
     
@@ -62,6 +76,7 @@
     	    
     	</activity>
        <activity android:name="org.witness.ssc.video.VideoPreferences" />
+       <activity android:name="org.witness.sscphase1.Preferences" android:label="Preferences"></activity>
     	
     </application>
 </manifest> 

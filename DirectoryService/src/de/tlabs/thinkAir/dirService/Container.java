@@ -22,6 +22,7 @@ public class Container implements Serializable {
 	private int				mem = 50;
 	private String 			cpuset = null;
 	private	int				cpushare = 1024;
+	private DBHelper		dbh = null;
 
 	public Container() {
 		this.status = ContainerState.UNKNOWN;
@@ -46,6 +47,12 @@ public class Container implements Serializable {
 		this.mem 	= mem;
 		this.cpuset = cpuset;
 		this.cpushare = cpushare;
+	}
+	
+	protected void finalize() throws Throwable{
+		super.finalize();  
+		dbh.dbClose();
+        System.out.println("The Container Object was destroyed!");
 	}
 
 	public enum ContainerType {
@@ -113,9 +120,10 @@ public class Container implements Serializable {
 	 * @return the status
 	 */
 	public int getStatus() {
-		DBHelper dbh = null;
 		try{
-			dbh = new DBHelper();
+			if(this.dbh == null){
+				dbh = new DBHelper();
+			}
 			ResultSet rs = dbh.dbSelect("select status from lxc where name = '" + this.name + "'"); 
 			if(rs.next()){
 				int status = rs.getInt("status");
@@ -123,9 +131,7 @@ public class Container implements Serializable {
 			}
 		} catch (SQLException e) {
             e.printStackTrace();
-        } finally {
-            dbh.dbClose();
-        }
+        } 
 		return this.status;
 	}
 
@@ -133,13 +139,14 @@ public class Container implements Serializable {
 	 * @param status the status to set
 	 */
 	public void setStatus(int status) {
-		DBHelper dbh = null;
 		try{
-			dbh = new DBHelper();
+			if(this.dbh == null){
+				dbh = new DBHelper();
+			}
 			dbh.dbUpdate("update lxc set status = " + status + " where name = '" + this.name + "'"); 
-		} finally {
-            dbh.dbClose();
-        }
+		}  catch (Exception e) {
+            e.printStackTrace();
+        } 
 		this.status = status;
 	}
 
@@ -353,7 +360,7 @@ public class Container implements Serializable {
 	public boolean createContainer() {
 
 		//String out = executeCommand("VBoxManage startvm " + this.name + " --type headless");
-		String out = executeCommand("/root/newlxc.py -n " + this.name + " --ip=" + this.ip);
+		String out = executeCommand("newlxc -n " + this.name + " --ip=" + this.ip);
 
 		if (out.isEmpty()) 
 			return true;

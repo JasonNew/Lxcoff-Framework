@@ -14,7 +14,7 @@ public class GoogleFaceDetection implements FaceDetection {
 
 	public static final String LOGTAG = "GoogleFaceDetection"; 
 	
-	public static int MAX_FACES = 10;
+	public static int MAX_FACES = 100;
 
 	Face[] faces = new Face[MAX_FACES];   	
 	FaceDetector faceDetector;

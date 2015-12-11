@@ -73,8 +73,6 @@ public class OCRActivity extends Activity implements OnClickListener,OnSharedPre
 	ObjectOutputStream oos			= null;
 	ObjectInputStream ois			= null;
 	
-	public static String dexOutputDir = null;
-
 	@SuppressLint("NewApi")
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -92,8 +90,6 @@ public class OCRActivity extends Activity implements OnClickListener,OnSharedPre
 		mButtonCamera.setOnClickListener(this);
 		
 		this.context = getApplicationContext();
-		
-		this.dexOutputDir = this.context.getDir("dex", 0).getAbsolutePath();
 		
 		// I wanna use network in main thread, so ...
         if (android.os.Build.VERSION.SDK_INT > 9) {

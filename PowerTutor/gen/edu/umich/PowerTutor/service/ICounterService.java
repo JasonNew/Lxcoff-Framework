@@ -1,6 +1,6 @@
 /*
  * This file is auto-generated.  DO NOT MODIFY.
- * Original file: E:\\Lxc-offloading\\PowerTutor\\src\\edu\\umich\\PowerTutor\\service\\ICounterService.aidl
+ * Original file: E:\\Lxcoff-Framework\\PowerTutor\\src\\edu\\umich\\PowerTutor\\service\\ICounterService.aidl
  */
 package edu.umich.PowerTutor.service;
 public interface ICounterService extends android.os.IInterface

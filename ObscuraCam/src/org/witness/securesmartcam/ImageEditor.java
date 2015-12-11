@@ -198,6 +198,8 @@ public class ImageEditor extends Activity implements OnTouchListener, OnClickLis
 	
 	public final static String TMP_FILE_DIRECTORY = "/Android/data/org.witness.sscphase1/files/";
 	
+	private String toastres = "";
+	
 	
 	//handles threaded events for the UI thread
     private Handler mHandler = new Handler()
@@ -213,8 +215,8 @@ public class ImageEditor extends Activity implements OnTouchListener, OnClickLis
            case 3: //completed
    	    	mProgressDialog.dismiss();
    	    	 
-   	 		//Toast autodetectedToast = Toast.makeText(ImageEditor.this, result + " face(s) detected", Toast.LENGTH_SHORT);
-   	 		//autodetectedToast.show();	        			
+   	 		Toast autodetectedToast = Toast.makeText(ImageEditor.this, toastres, Toast.LENGTH_SHORT);
+   	 		autodetectedToast.show();	        			
            	
            	break;
            default:
@@ -658,14 +660,19 @@ public class ImageEditor extends Activity implements OnTouchListener, OnClickLis
 		try {
 			Bitmap bProc = toGrayscale(imageBitmap);
 			GoogleFaceDetection gfd = new GoogleFaceDetection(bProc.getWidth(),bProc.getHeight());
+			long starttime = System.nanoTime();
 			int numFaces = gfd.findFaces(bProc);
-	        debug(ObscuraApp.TAG,"Num Faces Found: " + numFaces); 
+			long dura = System.nanoTime() - starttime;
+			this.toastres = "Num Faces Found: " + numFaces + ". Cost "+ dura/1000000 + " ms.";
+	        debug(ObscuraApp.TAG,"Num Faces Found: " + numFaces + ". Cost "+ dura/1000000 + " ms."); 
 	        dFaces = gfd.getFaces(numFaces);
 		} catch(NullPointerException e) {
 			dFaces = null;
 		}
 		return dFaces;				
 	}
+	
+
 	
 	public Bitmap toGrayscale(Bitmap bmpOriginal)
 	{        
