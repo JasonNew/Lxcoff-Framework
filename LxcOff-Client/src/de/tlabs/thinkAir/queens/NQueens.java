@@ -43,8 +43,8 @@ public class NQueens extends Remoteable {
 	{
 		this.N = N;
 		Method toExecute;
-		Class<?>[] paramTypes = {int.class, MyClass.class};
-		Object[] paramValues = {N, new MyClass()};
+		Class<?>[] paramTypes = {int.class};
+		Object[] paramValues = {N};
 
 		int result = 0;
 		try {
@@ -65,7 +65,7 @@ public class NQueens extends Remoteable {
 	}
 
 	@Remote
-	public int localSolveNQueens(int N, MyClass myclass) {
+	public int localSolveNQueens(int N) {
 
 		byte[][] board = new byte[N][N];
 		int countSolutions = 0;

@@ -110,7 +110,7 @@ public class OffSearch extends Remoteable {
 		long dura = System.nanoTime()-starttime;
 		if (logFileWriter != null) {
 			try {
-				logFileWriter.append(dura + "\n");
+				logFileWriter.append(dura/1000000 + "\n");
 				logFileWriter.flush();
 
 			} catch (IOException e) {

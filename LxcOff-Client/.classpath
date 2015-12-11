@@ -5,6 +5,7 @@
 	<classpathentry exported="true" kind="con" path="com.android.ide.eclipse.adt.DEPENDENCIES"/>
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="src" path="gen"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/LxcOff-Library"/>
+	<classpathentry exported="true" kind="lib" path="/LxcOff-Library/bin/lxcoff-library.jar"/>
+	<classpathentry exported="true" kind="lib" path="/CuckooChessAPK/libs/gson-1.7.1.jar"/>
 	<classpathentry kind="output" path="bin/classes"/>
 </classpath>

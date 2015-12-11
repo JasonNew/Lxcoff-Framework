@@ -50,6 +50,7 @@ public class PhoneHandler implements Runnable {
 	private DBHelper				dbh;
 	private static String			logFileName = null;
 	private static FileWriter 		logFileWriter = null;
+	private String 					RequestLog = null;
 
 	public PhoneHandler(Socket clientSocket, InputStream is, OutputStream os, DBHelper dbh) {
 		this.clientSocket 	= clientSocket;
@@ -121,8 +122,11 @@ public class PhoneHandler implements Runnable {
 					
 				case ControlMessages.PHONE_COMPUTATION_REQUEST:					
 					System.out.println("Execute request");
-				
+					
+					this.RequestLog = "";
 					boolean connected = false;
+					
+					long starttime = System.nanoTime();
 					//when the old worker_container can't work now, we need find a new available container
 					if(this.worker_container == null || this.worker_container.getStatus() != ContainerState.RESUMED){
 						do{
@@ -144,20 +148,16 @@ public class PhoneHandler implements Runnable {
 						}while(!connected);
 					}
 					
-					long starttime = System.nanoTime();
+					long dura = System.nanoTime() - starttime;
+					
+					this.RequestLog += dura/1000000;
+					
+					starttime = System.nanoTime();
 					//receive the object from phone-client ois and repost the request to container
 					HashMap<String, String> result = (HashMap<String, String>) receiveAndRepost(ois, this.worker_container);
 					
-					long dura = System.nanoTime()-starttime;
-/*					if (logFileWriter != null) {
-						try {
-							logFileWriter.append(dura + "\n");
-							logFileWriter.flush();
-						} catch (IOException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
-						}
-					}*/
+					dura = System.nanoTime()-starttime;
+
 					
 					releaseContainer(this.worker_container);
 					
@@ -188,6 +188,7 @@ public class PhoneHandler implements Runnable {
 						e.printStackTrace();
 						return;
 					}
+					this.traceLog(this.RequestLog);
 
 					break;
 					
@@ -276,7 +277,6 @@ public class PhoneHandler implements Runnable {
 		// Read the object in for execution
 		System.out.println("Read Object");
 		try {
-
 			// Get the object
 			String className = (String) objIn.readObject();
 			
@@ -290,8 +290,10 @@ public class PhoneHandler implements Runnable {
 			String[] pType = (String[]) tempTypes;
 			
 			String pValuestr = (String) objIn.readObject();
-
+			
 			System.out.println("Repost Method " + methodName);
+			
+			long starttime = System.nanoTime();
 			
 			this.conos.write(ControlMessages.PHONE_COMPUTATION_REQUEST);
 			
@@ -324,8 +326,10 @@ public class PhoneHandler implements Runnable {
 			String response = (String) this.conois.readObject();
 			result.put("retVal", response);
 			
+			long dura = System.nanoTime() - starttime;
+			//Record repost and execution time, we need to minus the execution time(from the server) to get the request transfer time 
+			this.RequestLog += " " + dura /1000000; 
 			return result;
-		
 
 		} catch (Exception e) {
 			// catch and return any exception since we do not know how to handle
@@ -504,5 +508,17 @@ public class PhoneHandler implements Runnable {
 		
 		con.setStatus(ContainerState.RESUMED);
 		
+	}
+	
+	private void traceLog(String log){
+		if (logFileWriter != null) {
+			try {
+				logFileWriter.append(log + "\n");
+				logFileWriter.flush();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
 	}
 }
