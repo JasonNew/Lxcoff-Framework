@@ -46,7 +46,7 @@ public class DirectoryService implements Runnable{
 
 		vbClones 		= new ArrayList<Clone>();
 		amazonClones 	= new ArrayList<Clone>();
-		config			= new Configuration(ControlMessages.DIRSERVICE_CONFIG_FILE);
+		config			= new Configuration(ControlMessages.VM_DIRSERVICE_CONFIG_FILE);
 
 /*		System.out.println("Connecting database and initing dbh...");
 		DBHelper dbh = new DBHelper();*/
@@ -56,7 +56,7 @@ public class DirectoryService implements Runnable{
 			config.printConfigFile();
 			
 			initializeClones();
-			startClones();
+			//startClones();
 			
 			serverSocket = new ServerSocket(config.getDirServicePort());
 			while (true) {
@@ -115,10 +115,10 @@ public class DirectoryService implements Runnable{
 			c.describeClone();
 		}
 
-		for (Clone c : amazonClones) {
+/*		for (Clone c : amazonClones) {
 			c.initializeClone(config);
 			c.describeClone();
-		}
+		}*/
 	}
 
 	private void startClones() {
@@ -184,7 +184,7 @@ public class DirectoryService implements Runnable{
 			
 			switch (config.getSetupType()) {
 			case LOCAL:
-				startVBClones();
+				//startVBClones();
 				break;
 
 			case AMAZON:
@@ -192,13 +192,13 @@ public class DirectoryService implements Runnable{
 				break;
 
 			case HYBRID:
-				startVBClones();
+				//startVBClones();
 				startAmazonClones();
 				break;
 			}
 		}
 		
-		private void startVBClones() {
+/*		private void startVBClones() {
 			for (int i = 0; i < config.getNrClonesVBToStartOnStartup(); i++) {
 				Clone c = vbClones.get(i); 
 				if (c.getStatus() == CloneState.STOPPED) {
@@ -211,7 +211,7 @@ public class DirectoryService implements Runnable{
 					System.out.println(c.getName() + " has been connected!");
 				}
 			}
-		}
+		}*/
 		
 		private void startAmazonClones() {
 			for (int i = 0; i < config.getNrClonesAmazonToStartOnStartup(); i++) {
@@ -227,7 +227,7 @@ public class DirectoryService implements Runnable{
 			}
 		}
 		
-		private boolean waitForCloneToAuthenticate(Clone c) {
+		/*private boolean waitForCloneToAuthenticate(Clone c) {
 			Long stime = System.nanoTime();
 			while(true){
 				try{
@@ -270,7 +270,7 @@ public class DirectoryService implements Runnable{
 					return false;
 				}
 			}
-		}
+		}*/
 		
 	}
 

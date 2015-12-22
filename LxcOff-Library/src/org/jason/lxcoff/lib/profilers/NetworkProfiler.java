@@ -11,7 +11,6 @@ import java.util.List;
 
 import org.jason.lxcoff.lib.ControlMessages;
 
-import android.annotation.TargetApi;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -31,7 +30,6 @@ import android.util.Log;
  * @author Andrius
  * 
  */
-@TargetApi(8)
 public class NetworkProfiler {
 	private static final String TAG = "PowerDroid-Client";
 	private static final int bwWindowMaxLength = 20;

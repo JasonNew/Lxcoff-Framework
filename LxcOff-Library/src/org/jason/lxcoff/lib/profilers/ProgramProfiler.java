@@ -1,6 +1,5 @@
 package org.jason.lxcoff.lib.profilers;
 
-import android.annotation.TargetApi;
 import android.os.Debug;
 import android.util.Log;
 import dalvik.bytecode.Opcodes;

@@ -13,6 +13,7 @@ import java.net.UnknownHostException;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.os.StrictMode;
 import android.provider.Settings.Secure;
 import android.util.Log;
 import android.view.View;
@@ -25,10 +26,12 @@ import de.tlabs.thinkAir.benchmarkBundle1.BenchmarkSet1;
 import de.tlabs.thinkAir.benchmarkBundle2.BenchmarkSet2;
 // import de.tlabs.thinkAir.eightQueens.EightQueens;
 import de.tlabs.thinkAir.faceDetection.FaceDetection;
+
 import org.jason.lxcoff.lib.Clone;
 import org.jason.lxcoff.lib.Configuration;
 import org.jason.lxcoff.lib.ControlMessages;
 import org.jason.lxcoff.lib.ExecutionController;
+
 import de.tlabs.thinkAir.queens.NQueens;
 import de.tlabs.thinkAir.sudoku.Sudoku;
 import de.tlabs.thinkAir.synthBenchmark.CalcIntensive;
@@ -54,6 +57,13 @@ public class StartExecution extends Activity {
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.main);
+		
+		// I wanna use network in main thread, so ...
+        if (android.os.Build.VERSION.SDK_INT > 9) {
+            StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
+            StrictMode.setThreadPolicy(policy);
+        }
+		
 		
 		ExecutionController.myId = Secure.getString(this.getContentResolver(), android.provider.Settings.Secure.ANDROID_ID);
 

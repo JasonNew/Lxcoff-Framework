@@ -70,6 +70,7 @@ public class ControlMessages {
 //	public static final String 	DIRSERVICE_RESOURCES			= "E:/dirService/configs/";
 	public static final String 	DIRSERVICE_RESOURCES			= "/root/dirservice/";
 	public static final String 	DIRSERVICE_CONFIG_FILE			= DIRSERVICE_RESOURCES + "config-dirservice.dat";
+	public static final String  VM_DIRSERVICE_CONFIG_FILE		= "/root/cloneroot/dirservice/config-dirservice.dat";
 	public static final String 	DIRSERVICE_CLONE_KEYS_FOLDER	= DIRSERVICE_RESOURCES + "clone-keys/";
 	public static final String 	DIRSERVICE_CLONE_PUBLIC_KEY		= DIRSERVICE_CLONE_KEYS_FOLDER + "publickey-";
 //	public static final String  DIRSERVICE_APK_DIR				= "E:/dirService/apk/";

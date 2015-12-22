@@ -453,6 +453,7 @@ public class ClientHandler {
 						apkFilePath = ControlMessages.CONTAINER_APK_DIR + appName + ".apk";
 						if (apkPresent(apkFilePath)) {
 							Log.d(TAG, "APK present");
+							out.write(ControlMessages.APK_PRESENT);
 						} else {
 							// this should never be executed
 							Log.d(TAG, "request APK"+apkFilePath);

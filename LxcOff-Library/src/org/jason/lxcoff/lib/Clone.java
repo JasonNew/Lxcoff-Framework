@@ -18,19 +18,13 @@ public class Clone implements Serializable {
 
 	private int 			id = -1;
 	private String 			name; // Especially useful for VirtualBox clones, the name is used to start/pause/stop the clones
-	private String 			ip;
+	private String 			ip = null;
 	private CloneState		status;
 	private int				portForPhone;
 	private int				portForClone;
 	private int				portForDir = 4322;
 	private CloneType		type;
 	private PublicKey		publicKey;
-	//Clone connect socket
-	public Socket 					conSocket;
-	public InputStream				conis;
-	public OutputStream			conos;
-	public ObjectOutputStream		conoos;
-	public ObjectInputStream		conois;
 
 	public Clone() {
 		this.status = CloneState.STOPPED;
@@ -103,9 +97,13 @@ public class Clone implements Serializable {
 	 * @return the ip
 	 */
 	public String getIp() {
-		String out = executeCommand("/root/dirservice/getip.sh " + this.name);
-		this.ip = out.trim();
-		return ip;
+		if(ip != null){
+			return ip;
+		}else{
+			String out = executeCommand("/root/cloneroot/dirservice/getip.sh " + this.name);
+			this.ip = out.trim();
+			return ip;
+		}
 	}
 
 	/**
@@ -303,8 +301,9 @@ public class Clone implements Serializable {
 	public boolean startVBClone() {
 
 		String out = executeCommand("VBoxManage startvm " + this.name + " --type headless");
-		//String out = executeCommand("VBoxManage startvm " + this.name + " --type gui");
-
+		String pid = executeCommand("ps aux | grep [s]tartvm | awk '{print $2}'");
+		String monitor = executeCommand("pidstat -d -u -p "+ pid + " 1 180 > monitor.log &");
+		
 		if (out.contains("has been successfully started.")) 
 			return true;
 

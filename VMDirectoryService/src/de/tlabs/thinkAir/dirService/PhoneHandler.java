@@ -1,12 +1,16 @@
 package de.tlabs.thinkAir.dirService;
 
+import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
+import java.io.BufferedReader;
 import java.io.EOFException;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OptionalDataException;
@@ -43,6 +47,13 @@ public class PhoneHandler implements Runnable {
 	private ObjectOutputStream 		oos;
 	private ObjectInputStream 		ois;
 	
+	//vm connect socket
+	private Socket 					conSocket;
+	private InputStream				conis;
+	private OutputStream			conos;
+	private ObjectOutputStream		conoos;
+	private ObjectInputStream		conois;
+	
 	private String					phoneID;
 	static 	String 					appName;						// the app name sent by the phone	
 	static	String 					apkFilePath;					// the path where the apk is installed
@@ -51,7 +62,6 @@ public class PhoneHandler implements Runnable {
 	static 	Class<?>[] 				pTypes;							// the types of the parameters passed to the method
 	static 	Object[] 				pValues;						// the values of the parameteres to be passed to the method
 	
-	private Container				worker_container = null;
 	private Clone					worker_clone = null;
 	
 	private final int 				BUFFER = 8192;
@@ -59,14 +69,16 @@ public class PhoneHandler implements Runnable {
 	private DBHelper				dbh;
 	private static String			logFileName = null;
 	private static FileWriter 		logFileWriter = null;
+	
+	private String 					RequestLog = null;
 
 	public PhoneHandler(Socket clientSocket, InputStream is, OutputStream os, DBHelper dbh) {
 		this.clientSocket 	= clientSocket;
 		this.is				= is;
 		this.os				= os;
 		this.dbh			= dbh;
-		this.logFileName = "/root/dirservice/ExecRecord/execrecord.txt"; 
-		File needlog = new File("/root/dirservice/ExecRecord/needlog");
+		this.logFileName = "/root/cloneroot/dirservice/ExecRecord/execrecord.txt"; 
+		File needlog = new File("/root/cloneroot/dirservice/ExecRecord/needlog");
 		if(needlog.exists()){
 			try {
 				File logFile = new File(logFileName);
@@ -83,18 +95,19 @@ public class PhoneHandler implements Runnable {
 	public void run() {
 
 		System.out.println("Waiting for commands from the phone...");
-
+		
 		int command = 0;
 
 		try{
 			ois = new ObjectInputStream(is);
 			oos = new ObjectOutputStream(os);
+			long startTime , dura;
 
 			while (command != -1) {
 
 				command = is.read();
 				System.out.println("Command: " + command);
-
+				
 				switch(command) {
 
 				case ControlMessages.PHONE_AUTHENTICATION:
@@ -111,7 +124,7 @@ public class PhoneHandler implements Runnable {
 					
 				case ControlMessages.APK_REGISTER:
 					appName = (String) ois.readObject();
-					apkFilePath = ControlMessages.DIRSERVICE_APK_DIR + appName + ".apk";
+					apkFilePath = "/root/cloneroot/off-app/" + appName + ".apk";
 					if (apkPresent(apkFilePath)) {
 						System.out.println("APK present " + appName);
 						os.write(ControlMessages.APK_PRESENT);
@@ -128,61 +141,47 @@ public class PhoneHandler implements Runnable {
 
 					break;
 					
-				case ControlMessages.PHONE_COMPUTATION_REQUEST:					
+				case ControlMessages.PHONE_COMPUTATION_REQUEST:	
 					System.out.println("Execute request");
 					
-					if(this.worker_clone == null || this.worker_clone.getStatus()!= CloneState.AUTHENTICATED){
-						Clone c = null;
-						
-						c = findAvailableClone();
-	
-						if (c != null) {
-							System.out.println("Found an authenticated/starting clone.");
-						}
-						else {
-							//Should not go in here for now.
-							System.err.println("There is no available clone running, should start one.");
-							c = startNewClone();
-							if (c == null) {
-								System.err.println("Could not find an available clone, neither started, nor stopped.");
-								break;
-							}
-							c.prepareClone();
-						}
-						c.setStatus(CloneState.ASSIGNED_TO_PHONE);
-						
-						//receive the object from phone-client ois and repost the request to container
-						this.worker_clone = c;
-					}else{
-						
-						this.worker_clone.setStatus(CloneState.ASSIGNED_TO_PHONE);
-					}
+					boolean connected = false;
 					
-					long starttime = System.nanoTime();
+					startTime = System.nanoTime();
+					if(this.worker_clone == null || this.worker_clone.getStatus()!= CloneState.AUTHENTICATED){
+						do{
+							this.worker_clone = findAvailableClone();
+		
+							if (this.worker_clone != null) {
+								System.out.println("Found an authenticated/starting clone.");
+								connected = waitForCloneToAuthenticate(this.worker_clone);
+							}
+							else {
+								System.err.println("There is no available clone running, should start one.");
+								this.worker_clone = startNewClone();
+								
+								if (this.worker_clone == null) {
+									System.err.println("Could not find an available clone, neither started, nor stopped.");
+									break;
+								}else{
+									//while starting the clone,we should wait for clone to connect
+									connected = waitForCloneToAuthenticate(this.worker_clone);
+								}
+							}
+						}while(!connected);
+					}else{
+						do{
+							connected = waitForCloneToAuthenticate(this.worker_clone);
+						}while(!connected);
+					}
+					dura = System.nanoTime() - startTime;
+					
+					//资源准备
+					this.RequestLog += dura/1000000 + " ";
+					
+					startTime = System.nanoTime();
 					HashMap<String, String> result = (HashMap<String, String>) receiveAndRepost(ois, this.worker_clone);
 					
-					long dura = System.nanoTime()-starttime;
-					if (logFileWriter != null) {
-						try {
-							logFileWriter.append(dura + "\n");
-							logFileWriter.flush();
-						} catch (IOException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
-						}
-					}
-					
 					releaseClone(this.worker_clone);
-					
-/*					//just for testing on windows with virtualbox
-					waitForCloneToAuthenticate();
-					
-					this.worker_container = null;
-
-					
-					System.out.println("Start to receive and repost");
-					Object result = receiveAndRepost(ois, this.worker_container);*/
-
 					try {
 						// Send back over the socket connection
 						System.out.println("Send result back");
@@ -191,7 +190,7 @@ public class PhoneHandler implements Runnable {
 						// Clear ObjectOutputCache - Java caching unsuitable
 						// in this case
 						this.oos.flush();
-						this.oos.reset();
+						//this.oos.reset();
 
 						System.out.println("Result successfully sent");
 					} catch (IOException e) {
@@ -199,7 +198,38 @@ public class PhoneHandler implements Runnable {
 						e.printStackTrace();
 						return;
 					}
+					
+					dura = System.nanoTime()-startTime;
+					//请求执行 + apk传输
+					this.RequestLog += dura/1000000;
+					this.traceLog(this.RequestLog);
+					this.RequestLog = "";
 
+					break;
+					
+				case ControlMessages.SEND_FILE_FIRST:
+					startTime = System.nanoTime();
+					System.out.println("The offloading need to send file first");
+					String filePath = (String) ois.readObject();
+					String fileName = filePath.substring(filePath.lastIndexOf("/")+1);
+					filePath = "/root/cloneroot/off-file/" + fileName;
+					if (apkPresent(filePath)) {
+						System.out.println("File present " + filePath);
+						os.write(ControlMessages.FILE_PRESENT);
+					} else {
+						System.out.println("request File " + filePath);
+						os.write(ControlMessages.SEND_FILE_REQUEST);
+						// Receive the apk file from the client
+						receiveApk(ois, filePath);
+					}
+					
+					//We need to push this into the phone now.
+					System.out.println("Trying to push the file to the VM phone.");
+					String out = executeCommand("adb push " + filePath + " /system/off-app/off-file/" );
+					dura = System.nanoTime() - startTime;
+					
+					//send file时间
+					this.RequestLog += dura / 1000000 + " ";
 					break;
 				}
 			}
@@ -261,6 +291,23 @@ public class PhoneHandler implements Runnable {
 		return dexFile;
 	}
 	
+	private void sendApk(String apkName, ObjectOutputStream objOut)
+			throws IOException {
+		File apkFile = new File(apkName);
+		FileInputStream fin = new FileInputStream(apkFile);
+		BufferedInputStream bis = new BufferedInputStream(fin);
+		byte[] tempArray = new byte[(int) apkFile.length()];
+		bis.read(tempArray, 0, tempArray.length);
+		// Send file length first
+		System.out.println("Sending apk length - " + tempArray.length);
+		objOut.writeInt(tempArray.length);
+		// Send the file
+		System.out.println("Sending apk");
+		objOut.write(tempArray);
+		objOut.flush();
+		bis.close();
+	}
+	
 	/**
 	 * Reads in the object to execute an operation on, name of the method to be
 	 * executed and repost it
@@ -287,36 +334,47 @@ public class PhoneHandler implements Runnable {
 
 			System.out.println("Repost Method " + methodName);
 			
-			clone.conos.write(ControlMessages.PHONE_COMPUTATION_REQUEST);
+			long starttime = System.nanoTime();
 			
-			clone.conoos.writeObject(appName);
+			this.conos.write(ControlMessages.PHONE_COMPUTATION_REQUEST);
+			
+			this.conoos.writeObject(appName);
+			
+			//see if the runtime needs apk. In container case, this will always be no need.
+			int needApk = this.conis.read();
+			if(needApk == ControlMessages.APK_REQUEST){
+				sendApk(apkFilePath, this.conoos);
+			}
 			
 //			this.conoos.reset();
-			clone.conoos.writeObject(className);
+			this.conoos.writeObject(className);
 			
-			clone.conoos.writeObject(objToExecute);
+			this.conoos.writeObject(objToExecute);
 
 			// Send the method to be executed
 			// Log.d(TAG, "Write Method - " + m.getName());
-			clone.conoos.writeObject(methodName);
+			this.conoos.writeObject(methodName);
 
 			// Log.d(TAG, "Write method parameter types");
 			//this.conoos.writeObject(pTypes);
-			clone.conoos.writeObject(pType);
+			this.conoos.writeObject(pType);
 
 			// Log.d(TAG, "Write method parameter values");
 			//this.conoos.writeObject(pValues);
-			clone.conoos.writeObject(pValuestr);
-			clone.conoos.flush();
+			this.conoos.writeObject(pValuestr);
+			this.conoos.flush();
 			
 			//waiting to retrieve result from container
 			System.out.println("Reading result from container");
 			
 			HashMap<String ,String> result = new HashMap<String ,String>(); 
-			String retType = (String) clone.conois.readObject();
+			String retType = (String) this.conois.readObject();
 			result.put("retType", retType);
-			String response = (String) clone.conois.readObject();
+			String response = (String) this.conois.readObject();
 			result.put("retVal", response);
+			
+			long dura = System.nanoTime() - starttime;
+			this.RequestLog += " " + dura /1000000; 
 			
 			return result;
 		
@@ -331,18 +389,18 @@ public class PhoneHandler implements Runnable {
 
 	}
 	
-	/*private boolean waitForContainerToAuthenticate(Container container) {
+	private boolean waitForCloneToAuthenticate(Clone c) {
 		Long stime = System.nanoTime();
 		while(true){
 			try{
 				this.conSocket  = new Socket();
-				System.out.println("Connecting worker container ...");
-				conSocket.connect(new InetSocketAddress(container.getIp(), container.getPortForDir()), 0);
+				System.out.println("Connecting worker clone ...");
+				conSocket.connect(new InetSocketAddress(c.getIp(), c.getPortForDir()), 0);
 				
 				Long dura = (System.nanoTime()-stime);
-				System.out.println("Connected worker container in " + dura/1000000 + "ms");
+				System.out.println("Connected worker clone in " + dura/1000000 + "ms");
 				
-				this.worker_container.setStatus(ContainerState.ASSIGNED_TO_PHONE);
+				this.worker_clone.setStatus(CloneState.ASSIGNED_TO_PHONE);
 				this.conis = this.conSocket.getInputStream();
 				this.conos = this.conSocket.getOutputStream();
 				this.conois = new ObjectInputStream(this.conis);
@@ -350,6 +408,13 @@ public class PhoneHandler implements Runnable {
 				
 				return true;
 			}catch(ConnectException e){
+				try {
+					Thread.sleep(100);
+				} catch (InterruptedException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+			}catch(NoRouteToHostException e){
 				try {
 					Thread.sleep(100);
 				} catch (InterruptedException e1) {
@@ -370,99 +435,15 @@ public class PhoneHandler implements Runnable {
 		
 	}
 
-	private Container findAvailableContainer() {
-		try{
-			dbh.dbUpdate("lock tables lxc write"); 
-			String sql = "select * from lxc where status in (2,1,0) order by status desc limit 1 ";
-			ResultSet rs = dbh.dbSelect(sql);
-			
-			if(rs.next()){
-				String name = rs.getString("name");
-				String ip = rs.getString("ip");
-				int status = rs.getInt("status");
-				int mem = rs.getInt("mem");
-				String cpuset = rs.getString("cpuset");
-				int cpushare = rs.getInt("cpushare");
-				//only update status in database so that nobody will choose this lxc anymore, 
-				//while the container object has old status for prepareContainer deciding what operation to do
-				dbh.dbUpdate("update lxc set status = " + ContainerState.ASSIGNING + " where name = '" + name + "'"); 
-				dbh.dbUpdate("unlock tables");
-				
-				if(ip == null){
-					ip = getAvailableIp();
-					dbh.dbUpdate("update lxc set ip = '" + ip + "' where name = '" + name + "'");
-				}
-				
-				Container con = new Container(name, ip, status, mem, cpuset, cpushare);
-				return con;
-			}else{
-				dbh.dbUpdate("unlock tables");
-				Container con = startNewContainer();
-				return con;
-				
-			}
-		} catch (SQLException e) {
-            e.printStackTrace();
-        } 
-		return null;
-		
-	}*/
-	
-	/**
-	 * Start the first available clone scanning the amazon clones first and virtualbox clones second.
-	 * @return
-	 */
-	/*private Container startNewContainer() {
-		try{
-			//find available ip for new container
-			String name = UUID.randomUUID().toString();
-			String ip = getAvailableIp();
-			if(ip == null)
-				return null;
-			
-			Container con = new Container(name, ip, ContainerState.CREATING);
-			
-			String sql = "insert into lxc (name, ip, status) values ('" + name + "','" + ip + "', " + ContainerState.CREATING +")";
-
-			boolean rs = dbh.dbUpdate(sql);
-			
-			if(rs){
-				return con;
-			}
-			
-		} catch (Exception e) {
-            e.printStackTrace();
-        } 
-		
-		return null;
-
-	}
-	
-	private String getAvailableIp(){
-		String ip = null;
-		try{
-			//find available ip for container
-			dbh.dbUpdate("lock tables ip write"); 
-			ResultSet rs = dbh.dbSelect("select ip from ip where inuse=0 limit 1");
-			if(rs.next()){
-				ip = rs.getString("ip");
-			}
-			
-			if(ip != null){
-				dbh.dbUpdate("update ip set inuse=1 where ip='" + ip + "'");
-			}
-			
-			dbh.dbUpdate("unlock tables");
-			return ip;
-		} catch (SQLException e) {
-            e.printStackTrace();
-        } 
-		
-		return null;
-		
-	}*/
-	
 	private void releaseClone(Clone clone){
+		try{
+			this.conoos.close();
+			this.conois.close();
+			this.conos.close();
+			this.conis.close();
+		}catch(IOException e){
+			e.printStackTrace();
+		}
 		
 		clone.setStatus(CloneState.AUTHENTICATED);
 		
@@ -471,9 +452,9 @@ public class PhoneHandler implements Runnable {
 	private synchronized Clone findAvailableClone() {
 		Clone bestc = null;
 
-		for (Clone c : DirectoryService.amazonClones)
+/*		for (Clone c : DirectoryService.amazonClones)
 			if (c.getStatus() == CloneState.AUTHENTICATED)
-				return c;
+				return c;*/
 		
 		for (Clone c : DirectoryService.vbClones){
 			if (c.getStatus() == CloneState.AUTHENTICATED)
@@ -489,17 +470,58 @@ public class PhoneHandler implements Runnable {
 	 */
 	private synchronized Clone startNewClone() {
 
-		for (Clone c : DirectoryService.amazonClones) {
+/*		for (Clone c : DirectoryService.amazonClones) {
 			if (c.getStatus() != CloneState.ASSIGNED_TO_PHONE) {
 				c.prepareClone();
 				return c;
 			}
-		}
+		}*/
 		for (Clone c : DirectoryService.vbClones) {
 			if (c.getStatus() == CloneState.STOPPED || c.getStatus() == CloneState.PAUSED) {
 				c.prepareClone();
 				return c;
 			}
+		}
+		return null;
+	}
+	
+	private void traceLog(String log){
+		if (logFileWriter != null) {
+			try {
+				logFileWriter.append(log + "\n");
+				logFileWriter.flush();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+	}
+	
+	private String executeCommand(String command) {
+		try {
+			Process p = Runtime.getRuntime().exec(command);
+			// you can pass the system command or a script to exec command.
+			BufferedReader stdInput = new BufferedReader(new InputStreamReader(p.getInputStream()));
+
+			BufferedReader stdError = new BufferedReader(new InputStreamReader(p.getErrorStream()));
+
+			// read the output from the command
+			StringBuilder sb = new StringBuilder();
+			String s = "";
+			while ((s = stdInput.readLine()) != null) {
+//				System.out.println("Std OUT: "+s);
+				sb.append(s);
+			}
+
+			while ((s = stdError.readLine()) != null) {
+				System.out.println("Std ERROR : "+s);
+			}
+
+			return sb.toString();
+
+		} catch (IOException e) {
+
+			e.printStackTrace();
 		}
 		return null;
 	}
