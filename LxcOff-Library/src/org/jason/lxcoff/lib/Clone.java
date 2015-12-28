@@ -301,8 +301,7 @@ public class Clone implements Serializable {
 	public boolean startVBClone() {
 
 		String out = executeCommand("VBoxManage startvm " + this.name + " --type headless");
-		String pid = executeCommand("ps aux | grep [s]tartvm | awk '{print $2}'");
-		String monitor = executeCommand("pidstat -d -u -p "+ pid + " 1 180 > monitor.log &");
+		executeCommandWithoutResponse("/root/cloneroot/dirservice/start_monitor.sh");
 		
 		if (out.contains("has been successfully started.")) 
 			return true;
@@ -378,6 +377,14 @@ public class Clone implements Serializable {
 			e.printStackTrace();
 		}
 		return null;
+	}
+	
+	private void executeCommandWithoutResponse(String command) {
+		try {
+			Process p = Runtime.getRuntime().exec(command);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 
 	public static void printInfoAboutCloneName() {

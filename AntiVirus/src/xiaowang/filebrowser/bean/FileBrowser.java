@@ -21,6 +21,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.tools.ant.taskdefs.Sleep;
 import org.jason.lxcoff.lib.Configuration;
 import org.jason.lxcoff.lib.ControlMessages;
 import org.jason.lxcoff.lib.ExecutionController;
@@ -103,6 +104,7 @@ public class FileBrowser extends ListActivity implements
 	private MarqueeView marqueeView;
 	private ProgressBar progressBar;
 	private Dialog menuDialog;
+	private static int apkIndex = 0;
 
 	private static String TAG = "FileBrowser";
 
@@ -110,8 +112,8 @@ public class FileBrowser extends ListActivity implements
 	private final String DATABASE_PATH = ControlMessages.CONTAINER_APK_DIR
 			+ "dictionary";
 	private final String DATABASE_FILENAME = "dictionary.db2";
-	private final String SCAN_FILE = ControlMessages.CONTAINER_APK_DIR
-			+ "off-file/" + "virusTarget.apk";
+	private final String SCAN_FILE_PATH = ControlMessages.CONTAINER_APK_DIR
+			+ "off-file/";
 	SQLiteDatabase database;
 	public static ArrayList<String> tempPath = new ArrayList<String>();
 	PackageManager pm;
@@ -974,18 +976,27 @@ public class FileBrowser extends ListActivity implements
 				// ºóÌ¨Ö´ÐÐ
 				protected String[] doInBackground(Integer... params) {
 					OffScan scanner = new OffScan(executionController);
-					long startTime = System.nanoTime();
-					boolean scanResult = scanner.scan(SCAN_FILE);
+					
+					for(int i = 0; i< 20; i++){
+						long startTime = System.nanoTime();
+						boolean scanResult = scanner.scan(SCAN_FILE_PATH + "virusTarget" + i + ".apk");
 
-					ArrayList<String> virusName = new ArrayList<String>();
-					ArrayList<String> virusPath = new ArrayList<String>();
-					long dura = System.nanoTime() - startTime;
+						ArrayList<String> virusName = new ArrayList<String>();
+						ArrayList<String> virusPath = new ArrayList<String>();
+						long dura = System.nanoTime() - startTime;
 
-					bundle.putStringArrayList("virusName", virusName);
-					bundle.putStringArrayList("virusPath", virusPath);
-					bundle.putLong("execTime", dura / 1000000);
-					bundle.putBoolean("result", scanResult);
-
+						bundle.putStringArrayList("virusName", virusName);
+						bundle.putStringArrayList("virusPath", virusPath);
+						bundle.putLong("execTime", dura / 1000000);
+						bundle.putBoolean("result", scanResult);
+						try {
+							Thread.currentThread().sleep(2500);
+						} catch (InterruptedException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						} 
+					}
+					
 					return null;
 				}
 

@@ -1,14 +1,11 @@
 package com.andymcsherry.library;
 
-import java.io.IOException;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
 
 import org.jason.lxcoff.lib.ExecutionController;
 import org.jason.lxcoff.lib.Remoteable;
 
 import dalvik.system.DexClassLoader;
-import android.content.Context;
 import edu.hws.jcm.data.Constant;
 import edu.hws.jcm.data.Expression;
 import edu.hws.jcm.data.ParseError;
@@ -55,6 +52,12 @@ public class OffMath extends Remoteable{
 	}
 	
 	public double localIntegrate(String fun, String v1, String v2){
+		double result = this.calculate(fun, v1, v2);
+		return result;
+		
+	}
+	
+	private double calculate(String fun, String v1, String v2){
 		double x1, x2;
 		Expression y1, y2, integFun;
 		Variable integVarX = new Variable(v1);

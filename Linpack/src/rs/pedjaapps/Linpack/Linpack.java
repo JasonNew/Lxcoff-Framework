@@ -17,13 +17,12 @@ public class Linpack extends Remoteable{
 		this.controller = controller;
 	}
 	
-	public Result doLinpack() {
+	public Result doLinpack(int matrix_n) {
 		Method toExecute;
-		Class<?>[] paramTypes = {};
-		Object[] paramValues = {};
+		Class<?>[] paramTypes = {int.class};
+		Object[] paramValues = {matrix_n};
 
 		Result result = null;
-		long starttime = System.nanoTime();
 		try {
 			toExecute = this.getClass().getDeclaredMethod("localRunLinpack", paramTypes);
 			result = (Result) controller.execute(toExecute, paramValues, this);
@@ -42,13 +41,18 @@ public class Linpack extends Remoteable{
 		return result;
 	}
 	
-	public Result localRunLinpack(){
+	public Result localRunLinpack(int matrix_n){
+		JavaLinpack l = new JavaLinpack(matrix_n);
+		return l.run_benchmark();
+	}
+	
+/*	public Result localRunLinpack(){
 		Result result = runLinpack(Result.class);
 		return result;
 	}
 	
     public native Result runLinpack(Class mClass);
-	
+*/	
 	
 	@Override
 	public void copyState(Remoteable state) {

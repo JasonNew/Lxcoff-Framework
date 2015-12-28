@@ -59,7 +59,7 @@ public class OffOcr2 extends Remoteable{
 	@SuppressLint("NewApi")
 	public String localDoOCR(String fileName){
 		BitmapFactory.Options bfo = new BitmapFactory.Options();
-		bfo.inPreferredConfig = Bitmap.Config.RGB_565;
+		bfo.inPreferredConfig = Bitmap.Config.ARGB_8888;
 
 		Bitmap imageBitmap = BitmapFactory.decodeFile(fileName, bfo);
 		

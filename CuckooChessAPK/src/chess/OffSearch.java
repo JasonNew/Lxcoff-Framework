@@ -28,8 +28,6 @@ import java.lang.reflect.Method;
 import org.jason.lxcoff.lib.ExecutionController;
 import org.jason.lxcoff.lib.Remoteable;
 
-
-
 /**
  *
  * @author petero
@@ -45,7 +43,7 @@ public class OffSearch extends Remoteable {
 	transient private static String TAG = "OffSearch";
 	transient private ExecutionController controller;
     transient Listener listener;
-    private static String logFileName = "/sdcard/DefaultGame.txt";
+    private static String logFileName = "/sdcard/GameRecord/CuckooChess.txt";
 	private static FileWriter logFileWriter;
 	
 	public OffSearch(ExecutionController controller, Position pos, long[] posHashList, int posHashListSize, byte generation, History ht){
@@ -60,7 +58,7 @@ public class OffSearch extends Remoteable {
 	}
 	
 	public static void startNewLog(){
-		logFileName = "/sdcard/GameRecord/game" + System.currentTimeMillis() + ".txt"; 
+		//logFileName = "/sdcard/GameRecord/game" + System.currentTimeMillis() + ".txt"; 
 		if (logFileWriter != null){
 			try {
 				logFileWriter.close();

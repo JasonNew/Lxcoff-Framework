@@ -448,7 +448,9 @@ public class ExecutionController {
 		Object result = null;
 		try {
 			Long startTime = System.nanoTime();
-			mOutStream.write(ControlMessages.SEND_FILE_FIRST);
+			
+			mOutStream.write(ControlMessages.PHONE_COMPUTATION_REQUEST_WITH_FILE);
+			
 			mObjOutStream.writeObject(filename);
 			int response = mInStream.read();
 
@@ -457,7 +459,6 @@ public class ExecutionController {
 				sendFile(filename, mObjOutStream);
 			}
 			
-			mOutStream.write(ControlMessages.PHONE_COMPUTATION_REQUEST);
 			result = sendAndExecute(m, pValues, o, mObjInStream, mObjOutStream);
 
 			Long duration = System.nanoTime() - startTime;
@@ -670,6 +671,8 @@ public class ExecutionController {
 			retType = "java.lang.Integer";
 		}else if(retType.equals("double")){
 			retType = "java.lang.Double";
+		}else if(retType.equals("boolean")){
+			retType = "java.lang.Boolean";
 		}
 		
 		String retVal = (String) objIn.readObject();

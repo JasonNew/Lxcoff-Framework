@@ -12,6 +12,7 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Random;
 
 import org.jason.lxcoff.lib.Configuration;
 import org.jason.lxcoff.lib.ControlMessages;
@@ -59,10 +60,12 @@ public class OCRActivity extends Activity implements OnClickListener,OnSharedPre
 	private static final int REQUEST_TAKE_PHOTO = 1;
 	private static final int REQUEST_PICK_PHOTO = 2;
 	
+	private int picIndex = 0;
+	
 	SharedPreferences settings;
 	
 	private String TAG = "OCRActivity";
-	private String imageFile = "/system/off-app/off-file/ocr.png";
+	private String imageFilePath = "/system/off-app/off-file/";
 	
 	Context context;
 	private Configuration		config;
@@ -350,17 +353,22 @@ public class OCRActivity extends Activity implements OnClickListener,OnSharedPre
 		switch (id) {
 		case R.id.bt_gallery:
 			//pickPhoto();
+			
 			long stime = System.nanoTime();
 			
 			OffOcr2 offocr = new OffOcr2(this.executionController);
 
 			Log.i(TAG, "OCR Begins. ");
-			String result = offocr.DoOCR(this.imageFile);
+			
+			int target = picIndex % 20;
+			
+			String result = offocr.DoOCR(this.imageFilePath + "ocr" + target + ".png");
 			long dura = System.nanoTime() - stime;
 
-			Log.i(TAG, "OCR text: " + result + ". Cost " + dura/1000000 + "ms.");
-			Toast.makeText(this, "OCR text: " + result + ". Cost " + dura/1000000 + "ms.", Toast.LENGTH_SHORT).show();
-
+			Log.i(TAG, "OCR target is " + target + ".Result text: " + result + ". Cost " + dura/1000000 + "ms.");
+			int sublen = result.length() > 20 ? 20 : result.length();
+			Toast.makeText(this, "OCR target is " + target + ".Result text: " + result.substring(0, sublen) + ". Cost " + dura/1000000 + "ms.", Toast.LENGTH_LONG).show();
+			picIndex++;
 			break;
 		case R.id.bt_camera:
 			takePhoto();

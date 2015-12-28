@@ -3,7 +3,6 @@ package de.tlabs.thinkAir.dirService;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
-import java.io.EOFException;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -13,30 +12,17 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.io.OptionalDataException;
 import java.io.OutputStream;
-import java.lang.reflect.Array;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.net.ConnectException;
 import java.net.InetSocketAddress;
 import java.net.NoRouteToHostException;
 import java.net.Socket;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.ArrayList;
+import java.net.SocketTimeoutException;
 import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.UUID;
-import java.util.Base64;
 
 import org.jason.lxcoff.lib.Clone;
-import org.jason.lxcoff.lib.Configuration;
 import org.jason.lxcoff.lib.ControlMessages;
-import org.jason.lxcoff.lib.ResultContainer;
 import org.jason.lxcoff.lib.Clone.CloneState;
-import org.jason.lxcoff.lib.profilers.NetworkProfiler;
 
 public class PhoneHandler implements Runnable {
 
@@ -70,7 +56,7 @@ public class PhoneHandler implements Runnable {
 	private static String			logFileName = null;
 	private static FileWriter 		logFileWriter = null;
 	
-	private String 					RequestLog = null;
+	private String 					RequestLog = "";
 
 	public PhoneHandler(Socket clientSocket, InputStream is, OutputStream os, DBHelper dbh) {
 		this.clientSocket 	= clientSocket;
@@ -102,6 +88,8 @@ public class PhoneHandler implements Runnable {
 			ois = new ObjectInputStream(is);
 			oos = new ObjectOutputStream(os);
 			long startTime , dura;
+			boolean connected;
+			HashMap<String, String> result;
 
 			while (command != -1) {
 
@@ -123,17 +111,21 @@ public class PhoneHandler implements Runnable {
 					break;
 					
 				case ControlMessages.APK_REGISTER:
+					
 					appName = (String) ois.readObject();
 					apkFilePath = "/root/cloneroot/off-app/" + appName + ".apk";
 					if (apkPresent(apkFilePath)) {
 						System.out.println("APK present " + appName);
 						os.write(ControlMessages.APK_PRESENT);
 					} else {
+						startTime = System.nanoTime();
 						System.out.println("request APK " + appName);
 						os.write(ControlMessages.APK_REQUEST);
 						// Receive the apk file from the client
 						receiveApk(ois, apkFilePath);
 						System.out.println("received APK");
+						dura = System.nanoTime() - startTime;
+						System.out.println("Transfering apk cost " + dura/1000000 + " ms.");
 					}
 					/*File dexFile = new File(apkFilePath);
 					libraries = addLibraries(dexFile);
@@ -144,7 +136,7 @@ public class PhoneHandler implements Runnable {
 				case ControlMessages.PHONE_COMPUTATION_REQUEST:	
 					System.out.println("Execute request");
 					
-					boolean connected = false;
+					connected = false;
 					
 					startTime = System.nanoTime();
 					if(this.worker_clone == null || this.worker_clone.getStatus()!= CloneState.AUTHENTICATED){
@@ -179,7 +171,7 @@ public class PhoneHandler implements Runnable {
 					this.RequestLog += dura/1000000 + " ";
 					
 					startTime = System.nanoTime();
-					HashMap<String, String> result = (HashMap<String, String>) receiveAndRepost(ois, this.worker_clone);
+					result = (HashMap<String, String>) receiveAndRepost(ois, this.worker_clone);
 					
 					releaseClone(this.worker_clone);
 					try {
@@ -207,21 +199,54 @@ public class PhoneHandler implements Runnable {
 
 					break;
 					
-				case ControlMessages.SEND_FILE_FIRST:
+				case ControlMessages.PHONE_COMPUTATION_REQUEST_WITH_FILE:	
+					System.out.println("Execute request with file");
+					
+					connected = false;
+					
+					startTime = System.nanoTime();
+					if(this.worker_clone == null || this.worker_clone.getStatus()!= CloneState.AUTHENTICATED){
+						do{
+							this.worker_clone = findAvailableClone();
+		
+							if (this.worker_clone != null) {
+								System.out.println("Found an authenticated/starting clone.");
+								connected = waitForCloneToAuthenticate(this.worker_clone);
+							}
+							else {
+								System.err.println("There is no available clone running, should start one.");
+								this.worker_clone = startNewClone();
+								
+								if (this.worker_clone == null) {
+									System.err.println("Could not find an available clone, neither started, nor stopped.");
+									break;
+								}else{
+									//while starting the clone,we should wait for clone to connect
+									connected = waitForCloneToAuthenticate(this.worker_clone);
+								}
+							}
+						}while(!connected);
+					}else{
+						do{
+							connected = waitForCloneToAuthenticate(this.worker_clone);
+						}while(!connected);
+					}
+					dura = System.nanoTime() - startTime;
+					
+					//资源准备
+					this.RequestLog += dura/1000000 + " ";
+					
+					//开始文件传输
 					startTime = System.nanoTime();
 					System.out.println("The offloading need to send file first");
 					String filePath = (String) ois.readObject();
 					String fileName = filePath.substring(filePath.lastIndexOf("/")+1);
 					filePath = "/root/cloneroot/off-file/" + fileName;
-					if (apkPresent(filePath)) {
-						System.out.println("File present " + filePath);
-						os.write(ControlMessages.FILE_PRESENT);
-					} else {
-						System.out.println("request File " + filePath);
-						os.write(ControlMessages.SEND_FILE_REQUEST);
-						// Receive the apk file from the client
-						receiveApk(ois, filePath);
-					}
+					//Actually we should always request the file.
+					System.out.println("request File " + filePath);
+					os.write(ControlMessages.SEND_FILE_REQUEST);
+					// Receive the apk file from the client
+					receiveApk(ois, filePath);
 					
 					//We need to push this into the phone now.
 					System.out.println("Trying to push the file to the VM phone.");
@@ -230,6 +255,34 @@ public class PhoneHandler implements Runnable {
 					
 					//send file时间
 					this.RequestLog += dura / 1000000 + " ";
+					
+					startTime = System.nanoTime();
+					result = (HashMap<String, String>) receiveAndRepost(ois, this.worker_clone);
+					
+					releaseClone(this.worker_clone);
+					try {
+						// Send back over the socket connection
+						System.out.println("Send result back");
+						this.oos.writeObject(result.get("retType"));
+						this.oos.writeObject(result.get("retVal"));
+						// Clear ObjectOutputCache - Java caching unsuitable
+						// in this case
+						this.oos.flush();
+						//this.oos.reset();
+
+						System.out.println("Result successfully sent");
+					} catch (IOException e) {
+						System.out.println("Connection failed when sending result back");
+						e.printStackTrace();
+						return;
+					}
+					
+					dura = System.nanoTime()-startTime;
+					//请求执行 + apk传输
+					this.RequestLog += dura/1000000;
+					this.traceLog(this.RequestLog);
+					this.RequestLog = "";
+
 					break;
 				}
 			}
@@ -374,7 +427,7 @@ public class PhoneHandler implements Runnable {
 			result.put("retVal", response);
 			
 			long dura = System.nanoTime() - starttime;
-			this.RequestLog += " " + dura /1000000; 
+			//this.RequestLog += " " + dura /1000000; 
 			
 			return result;
 		
@@ -395,7 +448,7 @@ public class PhoneHandler implements Runnable {
 			try{
 				this.conSocket  = new Socket();
 				System.out.println("Connecting worker clone ...");
-				conSocket.connect(new InetSocketAddress(c.getIp(), c.getPortForDir()), 0);
+				conSocket.connect(new InetSocketAddress(c.getIp(), c.getPortForDir()), 10000);
 				
 				Long dura = (System.nanoTime()-stime);
 				System.out.println("Connected worker clone in " + dura/1000000 + "ms");
@@ -407,8 +460,17 @@ public class PhoneHandler implements Runnable {
 				this.conoos = new ObjectOutputStream(this.conos);
 				
 				return true;
+			}catch(SocketTimeoutException e){
+				try {
+					System.out.println("Socket Time out. Trying again.");
+					Thread.sleep(100);
+				} catch (InterruptedException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
 			}catch(ConnectException e){
 				try {
+					System.out.println("ConnectException: " + e.getMessage());
 					Thread.sleep(100);
 				} catch (InterruptedException e1) {
 					// TODO Auto-generated catch block
@@ -416,6 +478,7 @@ public class PhoneHandler implements Runnable {
 				}
 			}catch(NoRouteToHostException e){
 				try {
+					System.out.println("NoRouteToHostException: " + e.getMessage());
 					Thread.sleep(100);
 				} catch (InterruptedException e1) {
 					// TODO Auto-generated catch block

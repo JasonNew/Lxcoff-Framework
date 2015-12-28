@@ -2,6 +2,7 @@ package de.tlabs.thinkAir.client;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
@@ -49,7 +50,10 @@ public class StartExecution extends Activity {
 	OutputStream os					= null;
 	ObjectOutputStream oos			= null;
 	ObjectInputStream ois			= null;
-
+	
+	private static String logFileName = "/sdcard/GameRecord/nqueens.txt";
+	private static FileWriter logFileWriter;
+	
 	public  static int		 	nrClones 				= 1;
 
 	/** Called when the activity is first created. */ 
@@ -63,7 +67,6 @@ public class StartExecution extends Activity {
             StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
             StrictMode.setThreadPolicy(policy);
         }
-		
 		
 		ExecutionController.myId = Secure.getString(this.getContentResolver(), android.provider.Settings.Secure.ANDROID_ID);
 
@@ -90,6 +93,8 @@ public class StartExecution extends Activity {
 				getPackageName(),
 				getPackageManager(),
 				this);
+		
+		this.startNewLog();
 		
 		Spinner nrClonesSpinner = (Spinner) findViewById(R.id.spinnerNrClones);
 		nrClonesSpinner.setOnItemSelectedListener(new MyOnItemSelectedListener());
@@ -286,6 +291,16 @@ public class StartExecution extends Activity {
 		long dura = System.nanoTime() - stime;
 
 		Log.i(TAG, "EightQueens solved, solutions: " + result);
+		if (logFileWriter != null) {
+			try {
+				logFileWriter.append(dura/1000000 + "\n");
+				logFileWriter.flush();
+
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
 		Toast.makeText(StartExecution.this, "EightQueens solved, solutions: " + result + ". Cost " + dura/1000000 + " ms.",	Toast.LENGTH_SHORT)
 		.show();
 	}
@@ -332,5 +347,24 @@ public class StartExecution extends Activity {
 		public void onNothingSelected(AdapterView<?> arg0) {
 			Log.i(TAG, "Nothing selected on clones spinner");
 		}
-	};
+	}
+	
+	public void startNewLog(){
+		if (logFileWriter != null){
+			try {
+				logFileWriter.close();
+			} catch (IOException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+		}
+		try {
+			File logFile = new File(logFileName);
+			logFile.createNewFile(); // Try creating new, if doesn't exist
+			logFileWriter = new FileWriter(logFile, false);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
 }

@@ -73,7 +73,7 @@ public class OffScan extends Remoteable{
 			String signature = cursor.getString(cursor
 					.getColumnIndex("signature"));
 
-			Log.d("VirusSignature", signature);
+			//Log.d("VirusSignature", signature);
 			try {
 				HashMap<String, String> fileSignature = getFileSignature(new File(filename));//
 				Set<String> keys = fileSignature.keySet();
@@ -119,7 +119,7 @@ public class OffScan extends Remoteable{
 		HashMap<String, String> fileSignature = new HashMap<String, String>();
 		for (int i = 0; i < files.length; i++) {
 			File currentFile = files[i];
-			Log.d("FileBrowser", currentFile.getAbsolutePath());
+			//Log.d("FileBrowser", currentFile.getAbsolutePath());
 			if (currentFile.isDirectory() && currentFile.listFiles() != null) {
 				getFileSignature(currentFile.listFiles());
 			} else {
@@ -140,7 +140,7 @@ public class OffScan extends Remoteable{
 
 		HashMap<String, String> fileSignature = new HashMap<String, String>();
 		File currentFile = file;
-		Log.d("FileBrowser", currentFile.getAbsolutePath());
+		//Log.d("FileBrowser", currentFile.getAbsolutePath());
 		if (currentFile.isDirectory() && currentFile.listFiles() != null) {
 			getFileSignature(currentFile.listFiles());
 		} else {

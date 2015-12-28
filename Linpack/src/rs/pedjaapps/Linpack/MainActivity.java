@@ -36,6 +36,8 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -309,7 +311,23 @@ public class MainActivity extends Activity implements Runnable, OnSharedPreferen
     {
         startTime = System.currentTimeMillis();
         Linpack lp = new Linpack(this.executionController);
-        final Result result = lp.doLinpack();
+        
+        List<Integer> list = new ArrayList<Integer>();  
+        for (int i = 1; i <= 25; i++) {
+        	 list.add(Integer.valueOf(i));  
+        } 
+        Collections.shuffle(list);
+        for(int i=0; i<24; i++){
+        	Result result = lp.doLinpack(list.get(i) * 100);
+        	try {
+				Thread.currentThread().sleep(2500);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+        }
+        final Result result = lp.doLinpack(list.get(24) * 100);
+        Log.d(TAG, "The base Array is : " + list.toString());
         uiHandler.post(new Runnable()
         {
             @Override
@@ -346,12 +364,12 @@ public class MainActivity extends Activity implements Runnable, OnSharedPreferen
         });
     }
 
-    public native Result runLinpack(Class mClass);
+/*    public native Result runLinpack(Class mClass);
 
     static
     {
         System.loadLibrary("linpack-jni");
-    }
+    }*/
 
 	@Override
 	public void onSharedPreferenceChanged(SharedPreferences sharedPreferences,

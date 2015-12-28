@@ -92,6 +92,7 @@ public class ControlMessages {
 	public static final int		SEND_FILE_FIRST					= 40;
 	public static final int		SEND_FILE_REQUEST			    = 41;
 	public static final int		FILE_PRESENT			    	= 42;
+	public static final int		PHONE_COMPUTATION_REQUEST_WITH_FILE		= 43;
 
 	
 	public enum SETUP_TYPE {

@@ -6,6 +6,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
@@ -72,19 +73,22 @@ public class ClientHandler {
 
 	static 	AtomicInteger 			nrClonesReady = new AtomicInteger(0); // The main thread waits for all the clone helpers to finish execution 
 	public static String			dexOutputDir = null;
+	
+	private static String logFileName = "/mnt/sdcard/nqueens_server.txt";
+	private static FileWriter logFileWriter;
 
 	public ClientHandler(Socket pClient, final Context cW) {
 		Log.d(TAG, "New Client connected");
 		this.mClient = pClient;
 		this.mContext = cW;
 		//this.config = config;
-		
+		this.startNewLog();
 		dexOutputDir = this.mContext.getDir("dex", 0).getAbsolutePath();
 		
 		if(! CloneThread.inuse){
 		//if(true){
 			CloneThread.inuse = true;
-
+			
 			Executer communicator;
 			communicator = new Executer();
 			communicator.start();	
@@ -313,17 +317,12 @@ public class ClientHandler {
 			Object result = null;
 			Long execDuration = null;
 			try {
-/*				Long startExecTime = System.nanoTime();
-				result = runMethod.invoke(objToExecute, pValues);
-				execDuration = System.nanoTime() - startExecTime;
-				Log.d(TAG, runMethod.getName() + ": pure execution time - "
-						+ (execDuration / 1000000) + "ms");*/
-				Method libLoader = objClass.getMethod("loadLibraries",
-						LinkedList.class);
+				Method libLoader = objClass.getMethod("loadLibraries", LinkedList.class);
 				libLoader.invoke(objToExecute, libraries);
 				Long startExecTime = System.nanoTime();
 				result = runMethod.invoke(objToExecute, pValues);
 				execDuration = System.nanoTime() - startExecTime;
+				traceLog("" + execDuration/1000000);
 				Log.d(TAG, runMethod.getName() + ": pure execution time - " + (execDuration / 1000000) + "ms");
 			} catch (InvocationTargetException e) {
 				// The method might have failed if the required shared library
@@ -340,9 +339,8 @@ public class ClientHandler {
 						Long startExecTime = System.nanoTime();
 						result = runMethod.invoke(objToExecute, pValues);
 						execDuration = System.nanoTime() - startExecTime;
-						Log.d(TAG, runMethod.getName()
-								+ ": pure execution time - "
-								+ (execDuration / 1000000) + "ms");
+						traceLog("" + execDuration / 1000000);
+						Log.d(TAG, runMethod.getName() + ": pure execution time - " + (execDuration / 1000000) + "ms");
 					} catch (InvocationTargetException e1) {
 						Log.d(TAG,"InvocationTargetException", e1.getTargetException());
 						result = e1;
@@ -437,7 +435,7 @@ public class ClientHandler {
 				}
 				
 				Log.d(TAG, "Init stream finished");
-
+				
 				int request = 0;
 				while (request != -1) {
 
@@ -548,72 +546,34 @@ public class ClientHandler {
 		return apkFile.exists();
 	}
 
-
-	/**
-	 * Connect to the directory service and ask for more clones.<br>
-	 * The directory service will reply with the IP address of the clones<br>
-	 * 
-	 * Launch the threads to connect to the other clones.<br>
-	 * 
-	 * @author Sokol
-	 */
-	/*private boolean connectToServerHelpers() {
-
-		Socket 				socket 	= null;
-		OutputStream 		os 		= null;
-		InputStream 		is 		= null;
-		ObjectOutputStream 	oos 	= null;
-		ObjectInputStream 	ois 	= null;
-		
-		try {
-			Log.d("Main-Server", "Trying to connect to directory service: " + config.getDirServiceIp());
-
-			// Connect to the directory service
-			socket 	= new Socket(config.getDirServiceIp(), config.getDirServicePort());
-			os 		= socket.getOutputStream();
-			is 		= socket.getInputStream();
-
-			Log.d("Main-Server", "Connection etablished whith directory service " + 
-					config.getDirServiceIp() + ":" + config.getDirServicePort());
-
-			// Tell DirService that this is a clone connecting
-			os.write(ControlMessages.CLONE_CONNECTION);
-
-			oos = new ObjectOutputStream(os);
-			ois = new ObjectInputStream(is);
-
-			// Ask for more clones
-			os.write(ControlMessages.NEED_CLONE_HELPERS);
-			os.write(numberOfCloneHelpers);
-
-			ArrayList<Clone> cloneHelpers = (ArrayList<Clone>) ois.readObject();
-			if ( cloneHelpers.size() != numberOfCloneHelpers) {
-				Log.i(TAG, "The directory service could not start the needed clones, actually started: " + cloneHelpers.size());
-				return false;
-			}
-
-			int cloneId = 0;
-			for (Clone c : cloneHelpers) {
-				// Start the thread that should connect to the clone helper
-				CloneHelperThread t = new CloneHelperThread(cloneId, c);
-				t.start();
-			}
-
-			return true;
-
-		} catch (Exception e) {
-			Log.e(TAG, "Not able to connect to the directory service: " + e.getMessage());
-		} catch (Error e) {
-			Log.e(TAG, "Not able to connect to the directory service: " + e.getMessage());
-		} finally {
+	public void startNewLog(){
+		if (logFileWriter != null){
 			try {
-				ois.close();
-				oos.close();
-				socket.close();
-			} catch (Exception e) {
+				logFileWriter.close();
+			} catch (IOException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
 			}
 		}
-
-		return false;
-	}*/
+		try {
+			File logFile = new File(logFileName);
+			logFile.createNewFile(); // Try creating new, if doesn't exist
+			logFileWriter = new FileWriter(logFile, true);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
+	public static void traceLog(String log){
+		if (logFileWriter != null) {
+			try {
+				logFileWriter.append(log + "\n");
+				logFileWriter.flush();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+	}
 }

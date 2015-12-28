@@ -197,15 +197,13 @@ public class PhoneHandler implements Runnable {
 					String filePath = (String) ois.readObject();
 					String fileName = filePath.substring(filePath.lastIndexOf("/")+1);
 					filePath = ControlMessages.DIRSERVICE_APK_DIR + "off-file/" + fileName;
-					if (apkPresent(filePath)) {
-						System.out.println("File present " + filePath);
-						os.write(ControlMessages.FILE_PRESENT);
-					} else {
-						System.out.println("request File " + filePath);
-						os.write(ControlMessages.SEND_FILE_REQUEST);
-						// Receive the apk file from the client
-						receiveApk(ois, filePath);
-					}
+					
+					//Actually we should always request the file.
+					System.out.println("request File " + filePath);
+					os.write(ControlMessages.SEND_FILE_REQUEST);
+					// Receive the apk file from the client
+					receiveApk(ois, filePath);
+					
 					break;
 				
 				}

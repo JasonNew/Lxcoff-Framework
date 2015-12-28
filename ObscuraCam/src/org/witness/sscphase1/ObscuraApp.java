@@ -65,7 +65,8 @@ public class ObscuraApp extends Activity implements OnClickListener, OnEulaAgree
 	OutputStream os					= null;
 	ObjectOutputStream oos			= null;
 	ObjectInputStream ois			= null;
-	private String imageFile = "/system/off-app/off-file/face.jpg";
+	private String imageFilePath = "/system/off-app/off-file/";
+	private int picIndex			= 0;
 	
 	SharedPreferences settings;
 	
@@ -222,12 +223,16 @@ public class ObscuraApp extends Activity implements OnClickListener, OnEulaAgree
 		{
 			OffDetect detect = new OffDetect(this.executionController);
 			
+			int target = picIndex % 20;
+			
 			long stime = System.nanoTime();
-			int result = detect.GetFace(this.imageFile);
+			int result = detect.GetFace(this.imageFilePath + "face" + target + ".jpg");
 			long dura = System.nanoTime() - stime;
-
-			Log.i(TAG, "Detecting Face Nums: " + result + ". Cost " + dura/1000000 + "ms.");
+			
+			Log.i(TAG, "Photo "+ target +" is chosen. Detecting Face Nums: " + result + ". Cost " + dura/1000000 + "ms.");
 			Toast.makeText(this, "Detecting Face Nums: " + result + ". Cost " + dura/1000000 + "ms.", Toast.LENGTH_SHORT).show();
+			
+			picIndex ++ ;
 /*			
 			try
 			{

@@ -79,6 +79,52 @@ public class DefIntegral extends AndyActivity implements OnSharedPreferenceChang
 	ObjectOutputStream oos			= null;
 	ObjectInputStream ois			= null;
 	
+	public static String[] PreDefFun = {
+		"sin(x+y)+sin(x+y)^2+sin(x+y)^3+sin(x+y)^4+sin(x+y)^5",
+		"x+y",
+		"x+y+x^2+y^2",
+		"sin(x+y)+sin(x+y)^2",
+		"x+y+x^2+y^2+x^3+y^3+x^4+y^4+x^5+y^5",
+		"x+y+x^2+y^2+x^3+y^3",
+		"sin(x+y)+sin(x+y)^2+sin(x+y)^3",
+		"x+y+x^2+y^2+x^3+y^3+x^4+y^4",
+		"sin(x+y)+sin(x+y)^2+sin(x+y)^3+sin(x+y)^4",
+		"x+y+x^2+y^2+x^3+y^3+x^4+y^4+x^5+y^5+x^6+y^6",
+		"sqrt(x)-sqrt(y)",
+		"cos(x^y)*sin(y^x)",
+		"8*x-y^2",
+		"lnx^y",
+		"e^x+y^pi",
+		"e^(x/sqrt(y))",
+		"1/x*cos(y/x)",
+		"y*sin(x)",
+		"4x+2",
+		"x^2*cos(y)*sin(y)",
+	};
+	
+	public static String[][] PreDefBounds = {
+		{"0", "1", "x", "x^2"},
+		{"0", "1", "x", "x^2"},
+		{"0", "1", "x", "x^2"},
+		{"0", "1", "x", "x^2"},
+		{"0", "1", "x", "x^2"},
+		{"0", "1", "x", "x^2"},
+		{"0", "1", "x", "x^2"},
+		{"0", "1", "x", "x^2"},
+		{"0", "1", "x", "x^2"},
+		{"0", "1", "x", "x^2"},
+		{"0", "1", "x", "x^2"},
+		{"0", "1", "x", "x^2"},
+		{"0", "1", "x", "x^2"},
+		{"0", "1", "x", "x^2"},
+		{"0", "1", "x", "x^2"},
+		{"1", "2", "x", "x^2"},
+		{"pi/2", "pi", "0", "x^2"},
+		{"0", "pi/2", "0", "1"},
+		{"0", "2", "0", "2"},
+		{"0", "1", "0", "pi/2"},
+	};
+	
 	SharedPreferences settings;
 
 	@Override
@@ -250,11 +296,62 @@ public class DefIntegral extends AndyActivity implements OnSharedPreferenceChang
 								Message m = new Message();
 								try{
 									m.arg2 = 1;
-									//m.obj = "" + AndyMath.integrate(getApplicationContext(), fun, xVar, yVar, bounds);
-									long startTime = System.nanoTime();
-									double result = MathHelper.integrate(fun, xVar, yVar, bounds);
-									long dura = System.nanoTime() - startTime;
-									m.obj = "Result is " + result + ". Cost time " + dura/1000000 + "ms.";
+									
+									for(int i=0; i< 20; i++){
+										long startTime = System.nanoTime();
+										//m.obj = "" + AndyMath.integrate(getApplicationContext(), fun, xVar, yVar, bounds);
+										double result = MathHelper.integrate(PreDefFun[i], xVar, yVar, PreDefBounds[i]);
+										long dura = System.nanoTime() - startTime;
+										if(Double.isNaN(result)){
+											Log.d(TAG, "Predefine data "+ i + " is invalid and get a NAN.");
+										}else{
+											Log.d(TAG, "Predefine data "+ i + " costs " + dura / 1000000 + " ms.");
+										}
+										
+										try {
+											Thread.currentThread().sleep(2500);
+										} catch (InterruptedException e) {
+											// TODO Auto-generated catch block
+											e.printStackTrace();
+										}
+										
+										startTime = System.nanoTime();
+										//m.obj = "" + AndyMath.integrate(getApplicationContext(), fun, xVar, yVar, bounds);
+										result = MathHelper.integrate("("+PreDefFun[i]+")^2", xVar, yVar, PreDefBounds[i]);
+										dura = System.nanoTime() - startTime;
+										if(Double.isNaN(result)){
+											Log.d(TAG, "Predefine data "+ i + " is invalid and get a NAN.");
+										}else{
+											Log.d(TAG, "Predefine data "+ i + "'s function power2 costs " + dura / 1000000 + " ms.");
+										}
+										
+										try {
+											Thread.currentThread().sleep(2500);
+										} catch (InterruptedException e) {
+											// TODO Auto-generated catch block
+											e.printStackTrace();
+										}
+										
+										startTime = System.nanoTime();
+										//m.obj = "" + AndyMath.integrate(getApplicationContext(), fun, xVar, yVar, bounds);
+										result = MathHelper.integrate("("+PreDefFun[i]+")^3", xVar, yVar, PreDefBounds[i]);
+										dura = System.nanoTime() - startTime;
+										if(Double.isNaN(result)){
+											Log.d(TAG, "Predefine data "+ i + " is invalid and get a NAN.");
+										}else{
+											Log.d(TAG, "Predefine data "+ i + "'s function power3 costs " + dura / 1000000 + " ms.");
+										}
+										
+										try {
+											Thread.currentThread().sleep(2500);
+										} catch (InterruptedException e) {
+											// TODO Auto-generated catch block
+											e.printStackTrace();
+										}
+										
+										m.obj = "Result is " + result + ". Cost time " + dura/1000000 + "ms.";
+									}
+									
 									handler.sendMessage(m);
 								}catch(ParseError e){
 									m.obj = e.getMessage();
