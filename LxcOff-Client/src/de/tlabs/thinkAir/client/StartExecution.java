@@ -287,11 +287,23 @@ public class StartExecution extends Activity {
 		NQueens puzzle = new NQueens(executionController, nrClones);
 
 		Log.i(TAG, "Nr Queens: " + nrQueens);
-		int result = puzzle.solveNQueens(nrQueens);
+		
+		int[] nqueens = {8, 7, 6, 8, 5, 6, 7, 7, 8, 7, 5, 4, 6, 6, 7, 8, 8, 7};
+		int result = 0;
+		for(int i=0; i<18; i++){
+			result = puzzle.solveNQueens(nqueens[i]);
+			try {
+				Thread.currentThread().sleep(2500);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		
 		long dura = System.nanoTime() - stime;
 
 		Log.i(TAG, "EightQueens solved, solutions: " + result);
-		if (logFileWriter != null) {
+/*		if (logFileWriter != null) {
 			try {
 				logFileWriter.append(dura/1000000 + "\n");
 				logFileWriter.flush();
@@ -300,7 +312,7 @@ public class StartExecution extends Activity {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-		}
+		}*/
 		Toast.makeText(StartExecution.this, "EightQueens solved, solutions: " + result + ". Cost " + dura/1000000 + " ms.",	Toast.LENGTH_SHORT)
 		.show();
 	}

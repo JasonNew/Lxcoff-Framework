@@ -360,12 +360,16 @@ public class OCRActivity extends Activity implements OnClickListener,OnSharedPre
 
 			Log.i(TAG, "OCR Begins. ");
 			
-			int target = picIndex % 20;
+			int target = 0;
 			
-			String result = offocr.DoOCR(this.imageFilePath + "ocr" + target + ".png");
+			String result = null;
+			for(int i = 0; i<20; i++){
+				result = offocr.DoOCR(this.imageFilePath + "ocr" + i + ".png");
+			}
+			
 			long dura = System.nanoTime() - stime;
 
-			Log.i(TAG, "OCR target is " + target + ".Result text: " + result + ". Cost " + dura/1000000 + "ms.");
+			//Log.i(TAG, "OCR target is " + target + ".Result text: " + result + ". Cost " + dura/1000000 + "ms.");
 			int sublen = result.length() > 20 ? 20 : result.length();
 			Toast.makeText(this, "OCR target is " + target + ".Result text: " + result.substring(0, sublen) + ". Cost " + dura/1000000 + "ms.", Toast.LENGTH_LONG).show();
 			picIndex++;

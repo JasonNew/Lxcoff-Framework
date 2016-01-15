@@ -153,8 +153,8 @@ public class ExecutionController {
 			// Find rtt to the server
 			NetworkProfiler.rttPing(mInStream, mOutStream);
 
-			mSolver = new ExecutionSolver(
-					ExecutionSolver.EXECUTION_LOCATION_DYNAMIC);
+			//mSolver = new ExecutionSolver(ExecutionSolver.EXECUTION_LOCATION_DYNAMIC);
+			mSolver = new ExecutionSolver(ExecutionSolver.EXECUTION_LOCATION_STATIC_REMOTE);
 
 			Log.d(TAG, "Getting apk data");
 			String apkName = mPManager.getApplicationInfo(mAppName, 0).sourceDir;

@@ -34,7 +34,7 @@ public class NetworkProfiler {
 	private static final String TAG = "PowerDroid-Client";
 	private static final int bwWindowMaxLength = 20;
 	private static final int rttInfinite = 100000000;
-	private static final int rttPings = 5;
+	private static final int rttPings = 1;
 
 	public static Double bandwidth = 0.0;
 	public static int rtt = rttInfinite;
@@ -138,8 +138,10 @@ public class NetworkProfiler {
 				Log.d(TAG, "Read Response");
 				response = in.read();
 				// response = (Integer)in.readObject();
-				if (response == ControlMessages.PONG)
+				if (response == ControlMessages.PONG){
 					tRtt = (int) (tRtt + (System.nanoTime() - start) / 2);
+					Log.d("PowerDroid-Profiler", "Response Ping - " + tRtt / 1000000 + "ms");
+				}
 				else {
 					Log.d(TAG, "Bad Response to Ping - " + response);
 					tRtt = rttInfinite;

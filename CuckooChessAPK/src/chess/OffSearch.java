@@ -27,6 +27,7 @@ import java.lang.reflect.Method;
 
 import org.jason.lxcoff.lib.ExecutionController;
 import org.jason.lxcoff.lib.Remoteable;
+import org.petero.cuckoochess.CuckooChess;
 
 /**
  *
@@ -56,27 +57,6 @@ public class OffSearch extends Remoteable {
         this.tt.setGeneration(this.generation);
         this.ht = new History();
 	}
-	
-	public static void startNewLog(){
-		//logFileName = "/sdcard/GameRecord/game" + System.currentTimeMillis() + ".txt"; 
-		if (logFileWriter != null){
-			try {
-				logFileWriter.close();
-			} catch (IOException e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
-			}
-		}
-		try {
-			File logFile = new File(logFileName);
-			logFile.createNewFile(); // Try creating new, if doesn't exist
-			logFileWriter = new FileWriter(logFile, true);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	}
-	
 	
 	public Search getSearch(){
 		Search sc = new Search(this.pos, this.posHashList, this.posHashListSize, this.tt, this.ht);
@@ -116,7 +96,7 @@ public class OffSearch extends Remoteable {
 				e.printStackTrace();
 			}
 		}
-		this.listener.notifyTimeCost("search "+maxDepth+" depth cost "+ dura/1000000 + " ms");
+		this.listener.notifyTimeCost("search "+maxDepth+" depth cost "+ dura/1000000 + " ms. Current steps : " + CuckooChess.steps);
 		return result;
 		
 	}    

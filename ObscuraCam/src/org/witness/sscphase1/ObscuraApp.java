@@ -224,9 +224,11 @@ public class ObscuraApp extends Activity implements OnClickListener, OnEulaAgree
 			OffDetect detect = new OffDetect(this.executionController);
 			
 			int target = picIndex % 20;
-			
+			int result = 0;
 			long stime = System.nanoTime();
-			int result = detect.GetFace(this.imageFilePath + "face" + target + ".jpg");
+			for(int i=0; i<23; i++){
+				result = detect.GetFace(this.imageFilePath + "face" + i%20 + ".jpg");
+			}
 			long dura = System.nanoTime() - stime;
 			
 			Log.i(TAG, "Photo "+ target +" is chosen. Detecting Face Nums: " + result + ". Cost " + dura/1000000 + "ms.");

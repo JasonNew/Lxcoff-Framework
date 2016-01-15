@@ -43,6 +43,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Scanner;
 
+import org.petero.cuckoochess.CuckooChess;
+
 /**
  * The glue between the chess engine and the GUI.
  * @author petero
@@ -197,7 +199,7 @@ public class ChessController {
         } else {
             game = new Game(computerPlayer, humanPlayer);
         }
-        
+        CuckooChess.steps = 1;
     }
     public final void startGame() {
         gui.setSelection(-1);

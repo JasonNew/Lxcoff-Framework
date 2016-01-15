@@ -35,6 +35,7 @@ import java.util.Random;
 import org.jason.lxcoff.lib.Configuration;
 import org.jason.lxcoff.lib.ControlMessages;
 import org.jason.lxcoff.lib.ExecutionController;
+import org.petero.cuckoochess.CuckooChess;
 
 import com.google.gson.Gson;
 
@@ -48,6 +49,7 @@ import android.util.Log;
  */
 public class ComputerPlayer implements Player {
     public static final String engineName;
+   
     private static final String TAG = "ComputerPlayer";
 
     static {
@@ -204,8 +206,13 @@ public class ComputerPlayer implements Player {
         if(this.alwaysLocal){
         	this.executionController.setUserChoice(ControlMessages.STATIC_LOCAL);
         }else{
-        	this.executionController.setUserChoice(ControlMessages.USER_CARES_ONLY_ENERGY);
+        	this.executionController.setUserChoice(ControlMessages.STATIC_REMOTE);
         }
+        
+        if(CuckooChess.steps >=51 && CuckooChess.steps <= 110){
+        	this.executionController.setUserChoice(ControlMessages.STATIC_LOCAL);
+        }
+        
         OffSearch sc = new OffSearch(this.executionController, pos, posHashList, posHashListSize, generation, ht);
 
         // Determine all legal moves
@@ -251,7 +258,8 @@ public class ComputerPlayer implements Player {
 				e.printStackTrace();
 			}
             //Toast.makeText(this.context, "search "+maxDepth+" depth cost "+ (System.nanoTime()-endtime)/1000000 + " ms : ", Toast.LENGTH_SHORT).show();
-            Log.d(TAG, "search with "+maxDepth+" depth costing "+ (System.nanoTime()-endtime)/1000000 + " ms : ");
+            Log.d(TAG, "search with "+maxDepth+" depth costing "+ (System.nanoTime()-endtime)/1000000 + " ms. Current Steps: " + CuckooChess.steps);
+            CuckooChess.steps++ ;
         }
         
         if(bestM == null){

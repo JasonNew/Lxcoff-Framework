@@ -45,6 +45,7 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 import chess.ChessParseError;
+import chess.ComputerPlayer;
 import chess.Move;
 import chess.OffSearch;
 import chess.Position;
@@ -59,6 +60,8 @@ public class CuckooChess extends Activity implements GUIInterface {
     boolean alwaysLocal;
     int maxDepth;
     static final int ttLogSize = 16; // Use 2^ttLogSize hash entries.
+    
+    public static int steps = 1;
     
     TextView status;
     ScrollView moveListScroll;
@@ -183,6 +186,8 @@ public class CuckooChess extends Activity implements GUIInterface {
                 return true;
             }
         });
+        
+        
     }
 
     @Override
@@ -326,7 +331,7 @@ public class CuckooChess extends Activity implements GUIInterface {
             return alert;
         }
         case CLIPBOARD_DIALOG: {
-            final CharSequence[] items = {"Copy Game", "Copy Position", "Paste", "Endgame 1"};
+            final CharSequence[] items = {"Copy Game", "Copy Position", "Paste", "Endgame 1", "Endgame 2"};
             AlertDialog.Builder builder = new AlertDialog.Builder(this);
             builder.setTitle("Clipboard");
             builder.setItems(items, new DialogInterface.OnClickListener() {
@@ -359,7 +364,15 @@ public class CuckooChess extends Activity implements GUIInterface {
                     case 3: {
                     	String fenPgn = "1k6/1r6/2K5/Q7/8/8/8/8 w - - 0 1";
                         try {
-                        	OffSearch.startNewLog();
+                            ctrl.setFENOrPGN(fenPgn);
+                        } catch (ChessParseError e) {
+                            Toast.makeText(getApplicationContext(), e.getMessage(), Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                    case 4: {
+                    	CuckooChess.steps = 1;
+                    	String fenPgn = "rnbqkb1r/1p3ppp/p3pn2/2p5/2BP4/4PN2/PP3PPP/RNBQ1RK1 w - - 0 1";
+                        try {
                             ctrl.setFENOrPGN(fenPgn);
                         } catch (ChessParseError e) {
                             Toast.makeText(getApplicationContext(), e.getMessage(), Toast.LENGTH_SHORT).show();

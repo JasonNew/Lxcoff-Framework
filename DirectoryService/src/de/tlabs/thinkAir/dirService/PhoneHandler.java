@@ -81,6 +81,9 @@ public class PhoneHandler implements Runnable {
 		try{
 			ois = new ObjectInputStream(is);
 			oos = new ObjectOutputStream(os);
+			long startTime , dura;
+			boolean connected;
+			HashMap<String, String> result;
 
 			while (command != -1) {
 
@@ -123,10 +126,9 @@ public class PhoneHandler implements Runnable {
 				case ControlMessages.PHONE_COMPUTATION_REQUEST:					
 					System.out.println("Execute request");
 					
-					this.RequestLog = "";
-					boolean connected = false;
+					connected = false;
 					
-					long starttime = System.nanoTime();
+					startTime = System.nanoTime();
 					//when the old worker_container can't work now, we need find a new available container
 					if(this.worker_container == null || this.worker_container.getStatus() != ContainerState.RESUMED){
 						do{
@@ -148,28 +150,16 @@ public class PhoneHandler implements Runnable {
 						}while(!connected);
 					}
 					
-					long dura = System.nanoTime() - starttime;
+					dura = System.nanoTime() - startTime;
 					
-					this.RequestLog += dura/1000000;
+					//资源准备
+					this.RequestLog += dura/1000000 + " ";
 					
-					starttime = System.nanoTime();
+					startTime = System.nanoTime();
 					//receive the object from phone-client ois and repost the request to container
-					HashMap<String, String> result = (HashMap<String, String>) receiveAndRepost(ois, this.worker_container);
-					
-					dura = System.nanoTime()-starttime;
-
+					result = (HashMap<String, String>) receiveAndRepost(ois, this.worker_container);
 					
 					releaseContainer(this.worker_container);
-					
-/*					//just for testing on windows with virtualbox
-					waitForCloneToAuthenticate();
-					
-					this.worker_container = null;
-
-					
-					System.out.println("Start to receive and repost");
-					Object result = receiveAndRepost(ois, this.worker_container);*/
-
 					try {
 						// Send back over the socket connection
 						System.out.println("Sending result back");
@@ -188,22 +178,87 @@ public class PhoneHandler implements Runnable {
 						e.printStackTrace();
 						return;
 					}
+					dura = System.nanoTime()-startTime;
+					//请求执行 + apk传输
+					this.RequestLog += dura/1000000;
 					this.traceLog(this.RequestLog);
+					this.RequestLog = "";
 
 					break;
 					
-				case ControlMessages.SEND_FILE_FIRST:
+				case ControlMessages.PHONE_COMPUTATION_REQUEST_WITH_FILE:					
+					System.out.println("Execute request with file");
+					
+					connected = false;
+					
+					startTime = System.nanoTime();
+					//when the old worker_container can't work now, we need find a new available container
+					if(this.worker_container == null || this.worker_container.getStatus() != ContainerState.RESUMED){
+						do{
+							this.worker_container = findAvailableContainer();
+							
+							boolean preres = worker_container.prepareContainer();
+							
+							//while starting the container,we should wait for container to connect
+							if(preres){
+								connected = waitForContainerToAuthenticate(worker_container);
+							}
+							
+						}while(!connected);
+					}//otherwise we can still use the old container
+					else{
+						do{
+							connected = waitForContainerToAuthenticate(worker_container);
+						}while(!connected);
+					}
+					dura = System.nanoTime() - startTime;
+					
+					//资源准备
+					this.RequestLog += dura/1000000 + " ";
+					
+					//开始文件传输
+					startTime = System.nanoTime();
 					System.out.println("The offloading need to send file first");
 					String filePath = (String) ois.readObject();
 					String fileName = filePath.substring(filePath.lastIndexOf("/")+1);
-					filePath = ControlMessages.DIRSERVICE_APK_DIR + "off-file/" + fileName;
-					
+					filePath = "/root/system/off-app/off-file/" + fileName;
 					//Actually we should always request the file.
 					System.out.println("request File " + filePath);
 					os.write(ControlMessages.SEND_FILE_REQUEST);
 					// Receive the apk file from the client
 					receiveApk(ois, filePath);
+					dura = System.nanoTime() - startTime;
 					
+					//send file时间
+					this.RequestLog += dura / 1000000 + " ";
+					
+					startTime = System.nanoTime();
+					result = (HashMap<String, String>) receiveAndRepost(ois, this.worker_container);
+					
+					releaseContainer(this.worker_container);
+					try {
+						// Send back over the socket connection
+						System.out.println("Send result back");
+						this.oos.writeObject(result.get("retType"));
+						this.oos.writeObject(result.get("retVal"));
+						// Clear ObjectOutputCache - Java caching unsuitable
+						// in this case
+						this.oos.flush();
+						//this.oos.reset();
+
+						System.out.println("Result successfully sent");
+					} catch (IOException e) {
+						System.out.println("Connection failed when sending result back");
+						e.printStackTrace();
+						return;
+					}
+					
+					dura = System.nanoTime()-startTime;
+					//请求执行 + apk传输
+					this.RequestLog += dura/1000000;
+					this.traceLog(this.RequestLog);
+					this.RequestLog = "";
+
 					break;
 				
 				}

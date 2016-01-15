@@ -1,6 +1,7 @@
 package org.jason.lxcoff.lib;
 
 import java.util.ArrayList;
+import java.util.Random;
 
 import org.jason.lxcoff.lib.db.DatabaseQuery;
 import org.jason.lxcoff.lib.profilers.NetworkProfiler;
@@ -44,7 +45,7 @@ public class ExecutionSolver {
 
 	ExecutionSolver(int regime) {
 		this.regime = regime;
-		userChoice = EXECUTION_LOCATION_STATIC_REMOTE;
+		//userChoice = EXECUTION_LOCATION_STATIC_REMOTE;
 	}
 
 	/**
@@ -154,6 +155,15 @@ public class ExecutionSolver {
 			return ((meanExecDurationRemotely == 0) ? true : (meanExecDurationRemotely < meanExecDurationLocally)) &&
 					((meanEnergyConsumptionRemotely == 0) ? true : (meanEnergyConsumptionRemotely < meanEnergyConsumptionLocally));
 		}
+		
+		/*Random r = new Random();
+		int choice = r.nextInt(1000);
+		int threshold = NetworkProfiler.rtt / 1000000 * 2;
+		if(choice <= threshold){
+			return false;
+		}else{
+			return true;
+		}*/
 	}
 	
 	public void setUserChoice(int userChoice)

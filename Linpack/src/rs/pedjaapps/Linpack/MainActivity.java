@@ -312,13 +312,16 @@ public class MainActivity extends Activity implements Runnable, OnSharedPreferen
         startTime = System.currentTimeMillis();
         Linpack lp = new Linpack(this.executionController);
         
-        List<Integer> list = new ArrayList<Integer>();  
+/*        List<Integer> list = new ArrayList<Integer>();  
         for (int i = 1; i <= 25; i++) {
         	 list.add(Integer.valueOf(i));  
         } 
-        Collections.shuffle(list);
+        Collections.shuffle(list);*/
+        
+        int[] baseArray = {7, 25, 15, 4, 1, 10, 14, 24, 2, 22, 5, 23, 11, 18, 
+        		20, 13, 6, 17, 3, 19, 16, 9, 12, 8, 21};
         for(int i=0; i<24; i++){
-        	Result result = lp.doLinpack(list.get(i) * 100);
+        	Result result = lp.doLinpack(baseArray[i] * 100);
         	try {
 				Thread.currentThread().sleep(2500);
 			} catch (InterruptedException e) {
@@ -326,8 +329,8 @@ public class MainActivity extends Activity implements Runnable, OnSharedPreferen
 				e.printStackTrace();
 			}
         }
-        final Result result = lp.doLinpack(list.get(24) * 100);
-        Log.d(TAG, "The base Array is : " + list.toString());
+        final Result result = lp.doLinpack(baseArray[24] * 100);
+        Log.d(TAG, "The base Array is : " + baseArray.toString());
         uiHandler.post(new Runnable()
         {
             @Override
