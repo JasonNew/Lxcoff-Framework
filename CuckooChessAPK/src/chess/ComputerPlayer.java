@@ -209,9 +209,9 @@ public class ComputerPlayer implements Player {
         	this.executionController.setUserChoice(ControlMessages.STATIC_REMOTE);
         }
         
-        if(CuckooChess.steps >=51 && CuckooChess.steps <= 110){
+/*        if(CuckooChess.steps >=51 && CuckooChess.steps <= 110){
         	this.executionController.setUserChoice(ControlMessages.STATIC_LOCAL);
-        }
+        }*/
         
         OffSearch sc = new OffSearch(this.executionController, pos, posHashList, posHashListSize, generation, ht);
 

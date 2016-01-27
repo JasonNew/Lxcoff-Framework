@@ -1,7 +1,9 @@
 package de.tlabs.thinkAir.dirService;
 
+import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -111,11 +113,14 @@ public class PhoneHandler implements Runnable {
 						System.out.println("APK present " + appName);
 						os.write(ControlMessages.APK_PRESENT);
 					} else {
+						startTime = System.nanoTime();
 						System.out.println("request APK " + appName);
 						os.write(ControlMessages.APK_REQUEST);
 						// Receive the apk file from the client
 						receiveApk(ois, apkFilePath);
 						System.out.println("received APK");
+						dura = System.nanoTime() - startTime;
+						System.out.println("Transfering apk cost " + dura/1000000 + " ms.");
 					}
 					/*File dexFile = new File(apkFilePath);
 					libraries = addLibraries(dexFile);
@@ -227,6 +232,7 @@ public class PhoneHandler implements Runnable {
 					os.write(ControlMessages.SEND_FILE_REQUEST);
 					// Receive the apk file from the client
 					receiveApk(ois, filePath);
+					
 					dura = System.nanoTime() - startTime;
 					
 					//send file ±º‰
@@ -354,8 +360,8 @@ public class PhoneHandler implements Runnable {
 			
 			//see if the runtime needs apk. In container case, this will always be no need.
 			int needApk = this.conis.read();
-/*			if(needApk == ControlMessages.APK_REQUEST){
-				sendApk(apkFilePath, this.conoos);
+/*			if(needApk == ControlMessages.APK_REQUEST || true){
+				sendApk("/root/cloneroot/off-app/org.witness.sscphase1.apk", this.conoos);
 			}*/
 //			this.conoos.reset();
 			this.conoos.writeObject(className);
@@ -386,7 +392,7 @@ public class PhoneHandler implements Runnable {
 			
 			long dura = System.nanoTime() - starttime;
 			//Record repost and execution time, we need to minus the execution time(from the server) to get the request transfer time 
-			this.RequestLog += " " + dura /1000000; 
+			//this.RequestLog += " " + dura /1000000; 
 			return result;
 
 		} catch (Exception e) {
@@ -578,5 +584,22 @@ public class PhoneHandler implements Runnable {
 				e.printStackTrace();
 			}
 		}
+	}
+	
+	private void sendApk(String apkName, ObjectOutputStream objOut)
+			throws IOException {
+		File apkFile = new File(apkName);
+		FileInputStream fin = new FileInputStream(apkFile);
+		BufferedInputStream bis = new BufferedInputStream(fin);
+		byte[] tempArray = new byte[(int) apkFile.length()];
+		bis.read(tempArray, 0, tempArray.length);
+		// Send file length first
+		System.out.println("Sending apk length - " + tempArray.length);
+		objOut.writeInt(tempArray.length);
+		// Send the file
+		System.out.println("Sending apk");
+		objOut.write(tempArray);
+		objOut.flush();
+		bis.close();
 	}
 }

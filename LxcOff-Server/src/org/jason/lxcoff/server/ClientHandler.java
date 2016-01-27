@@ -5,6 +5,7 @@ import java.io.BufferedOutputStream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -121,8 +122,11 @@ public class ClientHandler {
 		// Get the apk file
 		byte[] tempArray = new byte[apkLen];
 		Log.d(TAG, "Read apk");
+		long startTime = System.nanoTime();
 		objIn.readFully(tempArray);
+		long dura = System.nanoTime() - startTime;
 
+		startTime = System.nanoTime();
 		// Write it to the filesystem
 		File dexFile = new File(apkFilePath);
 		FileOutputStream fout = new FileOutputStream(dexFile);
@@ -130,9 +134,56 @@ public class ClientHandler {
 		BufferedOutputStream bout = new BufferedOutputStream(fout, BUFFER);
 		bout.write(tempArray);
 		bout.close();
+		dura = System.nanoTime() - startTime;
 
 		return dexFile;
 	}
+	
+	/* This is For test I/O and bandwidth*/
+	/* private File receiveApk(DynamicObjectInputStream objIn, String apkFilePath)
+			throws IOException {
+		// Receiving the apk file
+		// Get the length of the file receiving
+		int apkLen = objIn.readInt();
+		Log.d(TAG, "Read apk len - " + apkLen);
+
+		// Get the apk file
+		byte[] tempArray = new byte[apkLen];
+		Log.d(TAG, "Read apk");
+		long startTime = System.nanoTime();
+		objIn.readFully(tempArray);
+		long dura = System.nanoTime() - startTime;
+		Log.d(TAG, "Received apk costs " + dura/1000000 + "ms. The data transfer rate is " + apkLen/(dura/1000000) + " bytes/ms");
+
+		startTime = System.nanoTime();
+		// Write it to the filesystem
+		File dexFile = new File(apkFilePath);
+		FileOutputStream fout = new FileOutputStream(dexFile);
+
+		BufferedOutputStream bout = new BufferedOutputStream(fout, BUFFER);
+		for(int i=0; i<100; i++){
+			bout.write(tempArray);
+		}
+
+		bout.close();
+		dura = System.nanoTime() - startTime;
+		Log.d(TAG, "Write apk costs " + dura/1000000 + "ms. The I/O write rate is " + apkLen/1024*100/(dura/1000000) + " KB/ms");
+
+		startTime = System.nanoTime();
+		File testFile = new File("/mnt/sdcard/test");
+		FileInputStream fin = new FileInputStream(testFile);
+		BufferedInputStream bis = new BufferedInputStream(fin);
+		int bytesRead = 0;
+		byte[] buffer = new byte[1024];
+		while ((bytesRead = bis.read(buffer)) != -1) {
+		} 
+		dura = System.nanoTime() - startTime;
+		Log.d(TAG, "Read apk costs " + dura/1000000 + "ms. The I/O read rate is " + apkLen/1024*100/(dura/1000000) + " KB/ms");
+		bis.close();
+		
+		
+		return dexFile;
+	}*/
 
 	/**
 	 * Extract native libraries for the x86 platform included in the .apk file
@@ -449,7 +500,7 @@ public class ClientHandler {
 						appName = (String) objIn.readObject();
 
 						apkFilePath = ControlMessages.CONTAINER_APK_DIR + appName + ".apk";
-						if (apkPresent(apkFilePath)) {
+						if (apkPresent(apkFilePath) ) {
 							Log.d(TAG, "APK present");
 							out.write(ControlMessages.APK_PRESENT);
 						} else {
@@ -457,6 +508,7 @@ public class ClientHandler {
 							Log.d(TAG, "request APK"+apkFilePath);
 							out.write(ControlMessages.APK_REQUEST);
 							// Receive the apk file from the client
+							//receiveApk(objIn, apkFilePath);
 							receiveApk(objIn, apkFilePath);
 						}
 						File dexFile = new File(apkFilePath);
