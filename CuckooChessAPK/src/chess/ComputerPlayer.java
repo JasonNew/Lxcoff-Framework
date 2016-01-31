@@ -251,12 +251,12 @@ public class ComputerPlayer implements Player {
             long endtime = System.nanoTime();
             //Log.d("ComputerPlay", "serial cost "+ (endtime-starttime)/1000000 + " ms : " + jsonstr);
             bestM = sc.iterativeDeepening(moves, maxDepth, maxNodes, verbose);
-            try {
+/*            try {
 				Thread.currentThread().sleep(2500);
 			} catch (InterruptedException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
-			}
+			}*/
             //Toast.makeText(this.context, "search "+maxDepth+" depth cost "+ (System.nanoTime()-endtime)/1000000 + " ms : ", Toast.LENGTH_SHORT).show();
             Log.d(TAG, "search with "+maxDepth+" depth costing "+ (System.nanoTime()-endtime)/1000000 + " ms. Current Steps: " + CuckooChess.steps);
             CuckooChess.steps++ ;

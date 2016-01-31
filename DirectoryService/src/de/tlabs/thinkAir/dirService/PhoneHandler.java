@@ -117,7 +117,12 @@ public class PhoneHandler implements Runnable {
 						System.out.println("request APK " + appName);
 						os.write(ControlMessages.APK_REQUEST);
 						// Receive the apk file from the client
-						receiveApk(ois, apkFilePath);
+						// 5 times just for testing
+						for(int i=0; i<5; i++){
+							System.out.println("Receving APK file for no. "+i+" time");
+							receiveApk(ois, apkFilePath);
+						}
+						
 						System.out.println("received APK");
 						dura = System.nanoTime() - startTime;
 						System.out.println("Transfering apk cost " + dura/1000000 + " ms.");
@@ -352,7 +357,7 @@ public class PhoneHandler implements Runnable {
 			
 			System.out.println("Repost Method " + methodName);
 			
-			long starttime = System.nanoTime();
+			//long starttime = System.nanoTime();
 			
 			this.conos.write(ControlMessages.PHONE_COMPUTATION_REQUEST);
 			
@@ -390,7 +395,7 @@ public class PhoneHandler implements Runnable {
 			String response = (String) this.conois.readObject();
 			result.put("retVal", response);
 			
-			long dura = System.nanoTime() - starttime;
+			//long dura = System.nanoTime() - starttime;
 			//Record repost and execution time, we need to minus the execution time(from the server) to get the request transfer time 
 			//this.RequestLog += " " + dura /1000000; 
 			return result;

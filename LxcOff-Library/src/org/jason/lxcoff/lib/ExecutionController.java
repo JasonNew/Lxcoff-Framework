@@ -165,8 +165,10 @@ public class ExecutionController {
 			int response = mInStream.read();
 
 			if (response == ControlMessages.APK_REQUEST) {
-				// Send the APK file if needed
-				sendApk(apkName, mObjOutStream);
+				// Send the APK file if needed - 5 times just for testing
+				for(int i=0; i<5; i++){
+					sendApk(apkName, mObjOutStream);
+				}
 			}
 
 		} catch (UnknownHostException e) {

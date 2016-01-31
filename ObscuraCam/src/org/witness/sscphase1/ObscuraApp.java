@@ -226,7 +226,7 @@ public class ObscuraApp extends Activity implements OnClickListener, OnEulaAgree
 			int target = picIndex % 20;
 			int result = 0;
 			long stime = System.nanoTime();
-			for(int i=0; i<23; i++){
+			for(int i=0; i<20; i++){
 				result = detect.GetFace(this.imageFilePath + "face" + i%20 + ".jpg");
 			}
 			long dura = System.nanoTime() - stime;
